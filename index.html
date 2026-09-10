@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- තත්පර 2 කින් auto redirect වීම සඳහා meta tag එක -->
-    <meta http-equiv="refresh" content="2;url=https://shanandmadu143-glitch.github.io/Calculater/">
+    <!-- තත්පර 3 කින් Auto Redirect වීම සඳහා -->
+    <meta http-equiv="refresh" content="3;url=https://shanandmadu143-glitch.github.io/Calculater/">
     <title>WM Calculator</title>
-    
-    <!-- Google Fonts භාවිතයෙන් ලස්සන අකුරු විලාසයක් ලබාදීම -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
-        /* මූලික පිටුවේ පෙනුම (Black Theme) */
         * {
             margin: 0;
             padding: 0;
@@ -19,94 +18,238 @@
         }
 
         body {
-            background-color: #0d0d0d; /* තද කලු පසුබිම */
+            background: #050505;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Poppins', sans-serif;
             overflow: hidden;
+            position: relative;
         }
 
-        /* මැද තිබෙන Container එක */
-        .container {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* WM Calculator මාතෘකාව */
-        .title {
-            color: #ffffff; /* සුදු පාට අකුරු */
-            font-size: 3rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* සුලු glow effect එකක් */
-            animation: fadeIn 1s ease-in-out;
-        }
-
-        /* Loading Spinner Animation එක */
-        .spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left-color: #ffffff; /* සුදු පැහැති කැරකෙන කොටස */
+        /* Ambient Dynamic Background Glows */
+        .bg-glow-1, .bg-glow-2 {
+            position: absolute;
+            width: 350px;
+            height: 350px;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            filter: blur(120px);
+            opacity: 0.25;
+            animation: floatGlow 3s ease-in-out infinite alternate;
         }
 
-        /* Keyframes Animations */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+        .bg-glow-1 {
+            background: #ff007f;
+            top: 15%;
+            left: 20%;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .bg-glow-2 {
+            background: #00f0ff;
+            bottom: 15%;
+            right: 20%;
+            animation-delay: -1.5s;
         }
 
-        /* Mobile Responsive */
+        /* Subtle Animated Tech Grid Overlay */
+        .bg-grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 3s linear infinite;
+        }
+
+        /* Glassmorphism Card Container */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 50px 60px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8),
+                        inset 0 0 15px rgba(255, 255, 255, 0.02);
+            animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Rainbow Gradient Text Effect */
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            margin-bottom: 35px;
+            background: linear-gradient(
+                90deg, 
+                #ff0055, 
+                #7a00ff, 
+                #00e5ff, 
+                #00ff66, 
+                #ffea00, 
+                #ff0055
+            );
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowGradient 3s ease infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.3));
+        }
+
+        /* Futuristic Dual-Ring Orbit Loader */
+        .loader-wrapper {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+
+        .loader-ring-1 {
+            border-top-color: #00f0ff;
+            border-right-color: #00f0ff;
+            animation: spinClockwise 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            filter: drop-shadow(0 0 8px #00f0ff);
+        }
+
+        .loader-ring-2 {
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-bottom-color: #ff007f;
+            border-left-color: #ff007f;
+            animation: spinCounterClockwise 0.9s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            filter: drop-shadow(0 0 8px #ff007f);
+        }
+
+        .loader-core {
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            top: 35%;
+            left: 35%;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ffffff;
+            animation: pulseCore 1s ease-in-out infinite alternate;
+        }
+
+        /* Redirect Bar Dynamic Progress */
+        .progress-bar-container {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 35px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff007f, #00f0ff);
+            animation: fillProgress 3s linear forwards;
+        }
+
+        /* Animations Keyframes */
+        @keyframes rainbowGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes spinClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinCounterClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulseCore {
+            0% { transform: scale(0.6); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(20px, -20px) scale(1.2); }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fillProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Mobile View Compatibility */
         @media (max-width: 600px) {
-            .title {
-                font-size: 2.2rem;
+            .card {
+                padding: 40px 30px;
+                width: 85%;
             }
-            .spinner {
-                width: 35px;
-                height: 35px;
-                border-width: 3px;
+            .title {
+                font-size: 2rem;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- මාතෘකාව -->
-        <h1 class="title">WM Calculator</h1>
+    <!-- Dynamic Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- Main Glass Card Container -->
+    <div class="card">
+        <!-- Title with All-Color Gradient -->
+        <h1 class="title">WM CALCULATOR</h1>
         
-        <!-- Loading Animation -->
-        <div class="spinner"></div>
+        <!-- Futuristic Dual Ring Loader -->
+        <div class="loader-wrapper">
+            <div class="loader-ring loader-ring-1"></div>
+            <div class="loader-ring loader-ring-2"></div>
+            <div class="loader-core"></div>
+        </div>
+
+        <!-- Progress Line for 3 Seconds -->
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
     </div>
 
-    <!-- JavaScript මගින්ද සුරක්ෂිතව තත්පර 2කින් redirect කිරීම -->
+    <!-- JavaScript Auto Redirect in 3 Seconds -->
     <script>
         setTimeout(function() {
             window.location.href = "https://shanandmadu143-glitch.github.io/Calculater/";
-        }, 2000); // තත්පර 2 (2000 milliseconds)
+        }, 3000); // 3000ms = 3 Seconds
     </script>
 
 </body>
