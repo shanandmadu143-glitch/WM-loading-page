@@ -1,1 +1,114 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- තත්පර 2 කින් auto redirect වීම සඳහා meta tag එක -->
+    <meta http-equiv="refresh" content="2;url=https://shanandmadu143-glitch.github.io/Calculater/">
+    <title>WM Calculator</title>
+    
+    <!-- Google Fonts භාවිතයෙන් ලස්සන අකුරු විලාසයක් ලබාදීම -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* මූලික පිටුවේ පෙනුම (Black Theme) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0d0d0d; /* තද කලු පසුබිම */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+        }
+
+        /* මැද තිබෙන Container එක */
+        .container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* WM Calculator මාතෘකාව */
+        .title {
+            color: #ffffff; /* සුදු පාට අකුරු */
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* සුලු glow effect එකක් */
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        /* Loading Spinner Animation එක */
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #ffffff; /* සුදු පැහැති කැරකෙන කොටස */
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Keyframes Animations */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .title {
+                font-size: 2.2rem;
+            }
+            .spinner {
+                width: 35px;
+                height: 35px;
+                border-width: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- මාතෘකාව -->
+        <h1 class="title">WM Calculator</h1>
+        
+        <!-- Loading Animation -->
+        <div class="spinner"></div>
+    </div>
+
+    <!-- JavaScript මගින්ද සුරක්ෂිතව තත්පර 2කින් redirect කිරීම -->
+    <script>
+        setTimeout(function() {
+            window.location.href = "https://shanandmadu143-glitch.github.io/Calculater/";
+        }, 2000); // තත්පර 2 (2000 milliseconds)
+    </script>
+
+</body>
+</html>
 
