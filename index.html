@@ -149,13 +149,25 @@
             animation: pulseCore 1s ease-in-out infinite alternate;
         }
 
-        /* Normal Created By Text */
-        .created-by {
-            color: rgba(255, 255, 255, 0.85); /* සාමාන්‍ය පැහැදිලි සුදු පැහැය */
-            font-size: 0.95rem;
-            font-weight: 400;
-            letter-spacing: 1.5px;
+        /* Created By Text Styling */
+        .created-container {
             margin-top: 25px;
+        }
+
+        .created-by {
+            color: rgba(255, 255, 255, 0.6); /* මඳක් අඩු දීප්තියක් සහිත සුදු පැහැය */
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .author-name {
+            color: #ffffff; /* පැහැදිලි සුදු පැහැය */
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
         }
 
         /* Redirect Bar Dynamic Progress */
@@ -227,7 +239,10 @@
                 font-size: 2rem;
             }
             .created-by {
-                font-size: 0.85rem;
+                font-size: 0.75rem;
+            }
+            .author-name {
+                font-size: 1rem;
             }
         }
     </style>
@@ -251,8 +266,11 @@
             <div class="loader-core"></div>
         </div>
 
-        <!-- Created By Text -->
-        <p class="created-by">Created BY :- Yomal Lakshan</p>
+        <!-- Created By & Author Section -->
+        <div class="created-container">
+            <p class="created-by">Created BY :-</p>
+            <p class="author-name">Yomal Lakshan</p>
+        </div>
 
         <!-- Progress Line for 3 Seconds -->
         <div class="progress-bar-container">
