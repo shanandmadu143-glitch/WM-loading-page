@@ -1,510 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeStudio - Live HTML/CSS/JS Playground</title>
-  <!-- Google Fonts & Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <style>
-    :root {
-      --bg-dark: #0f172a;
-      --bg-card: #1e293b;
-      --bg-editor: #090d16;
-      --accent-blue: #38bdf8;
-      --accent-purple: #818cf8;
-      --accent-green: #34d399;
-      --text-light: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-    }
+    <meta charset="UTF-8">
+    <!-- Mobile සහ Tablet සඳහා හොඳින්ම පෙනීමට -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Web Creator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-light);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    /* Header Styling */
-    header {
-      background-color: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 10;
-    }
+        /* Header & Switcher UI */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #11111b;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+        }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--accent-blue);
-    }
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #89b4fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .logo i {
-      font-size: 1.5rem;
-      color: var(--accent-purple);
-    }
+        .logo span {
+            color: #f38ba8;
+        }
 
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+        /* View Switcher (Code / Preview) */
+        .view-switcher {
+            display: flex;
+            background-color: #313244;
+            border-radius: 30px;
+            padding: 4px;
+        }
 
-    .btn {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
+        .view-switcher button {
+            background: transparent;
+            border: none;
+            color: #a6adc8;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .btn:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+        .view-switcher button.active {
+            background-color: #89b4fa;
+            color: #11111b;
+            box-shadow: 0 2px 10px rgba(137, 180, 250, 0.4);
+        }
 
-    .btn-secondary {
-      background: #334155;
-      color: var(--text-light);
-    }
+        /* Main Container */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-    .btn-green {
-      background: #10b981;
-    }
+        /* Editor Section */
+        #editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.3s ease;
+        }
 
-    .btn-danger {
-      background: #ef4444;
-    }
+        /* Code Tabs (HTML, CSS, JS) */
+        .code-tabs {
+            display: flex;
+            background-color: #181825;
+            padding: 0 10px;
+        }
 
-    .toggle-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-right: 10px;
-    }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #6c7086;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
 
-    /* Main Container */
-    .app-container {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 60px);
-      transition: flex-direction 0.3s ease;
-    }
+        .tab-btn.active {
+            color: #cdd6f4;
+            border-bottom-color: #f38ba8;
+        }
 
-    .app-container.vertical {
-      flex-direction: column;
-    }
+        .tab-btn:hover {
+            color: #bac2de;
+        }
 
-    /* Editor Section */
-    .editors-pane {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border-right: 2px solid var(--border-color);
-      background: var(--bg-card);
-    }
+        /* Textareas */
+        .code-area {
+            flex: 1;
+            width: 100%;
+            background-color: #1e1e2e;
+            color: #a6e3a1;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px; /* 16px prevents auto-zoom on mobile */
+            padding: 15px;
+            border: none;
+            outline: none;
+            resize: none;
+            display: none;
+        }
 
-    .editor-tabs {
-      display: flex;
-      background: #151e2e;
-      border-bottom: 1px solid var(--border-color);
-    }
+        .code-area.active {
+            display: block;
+        }
 
-    .tab-btn {
-      padding: 10px 18px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
+        /* Preview Section */
+        #preview-container {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
 
-    .tab-btn.active {
-      color: var(--text-light);
-      background: var(--bg-card);
-      border-bottom-color: var(--accent-blue);
-    }
+        #preview-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
-    .tab-btn i.fa-html5 { color: #e34f26; }
-    .tab-btn i.fa-css3-alt { color: #1572b6; }
-    .tab-btn i.fa-js { color: #f7df1e; }
+        /* View Toggle Logic */
+        main.show-preview #editor-container {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-    .editor-content {
-      flex: 1;
-      position: relative;
-    }
-
-    textarea.code-input {
-      width: 100%;
-      height: 100%;
-      background: var(--bg-editor);
-      color: #e2e8f0;
-      border: none;
-      padding: 16px;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      resize: none;
-      outline: none;
-      display: none;
-    }
-
-    textarea.code-input.active {
-      display: block;
-    }
-
-    /* Output / Preview Section */
-    .preview-pane {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #ffffff;
-      position: relative;
-    }
-
-    .preview-header {
-      background: #1e293b;
-      color: var(--text-muted);
-      padding: 6px 16px;
-      font-size: 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    iframe#preview-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #ffffff;
-    }
-
-    /* Fullscreen Mode */
-    .preview-pane.fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9999;
-    }
-
-    /* Responsive adjustment */
-    @media (max-width: 768px) {
-      .app-container {
-        flex-direction: column;
-      }
-      .editors-pane {
-        border-right: none;
-        border-bottom: 2px solid var(--border-color);
-      }
-    }
-  </style>
+        main.show-preview #preview-container {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Top Navigation Header -->
-  <header>
-    <div class="logo">
-      <i class="fa-solid fa-code"></i>
-      <span>CodeLab Live</span>
-    </div>
+    <header>
+        <div class="logo">Web<span>Creator</span></div>
+        <div class="view-switcher">
+            <button id="btn-code" class="active">Code</button>
+            <button id="btn-preview">Live Preview</button>
+        </div>
+    </header>
 
-    <div class="controls">
-      <div class="toggle-group">
-        <input type="checkbox" id="auto-run" checked>
-        <label for="auto-run">Auto-Sync Live</label>
-      </div>
+    <main id="main-area">
+        <!-- Code Editor View -->
+        <div id="editor-container">
+            <div class="code-tabs">
+                <button class="tab-btn active" data-target="html-code">HTML</button>
+                <button class="tab-btn" data-target="css-code">CSS</button>
+                <button class="tab-btn" data-target="js-code">JS</button>
+            </div>
+            
+            <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false"></textarea>
+            <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" style="color:#89dceb;"></textarea>
+            <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" style="color:#f9e2af;"></textarea>
+        </div>
 
-      <button class="btn btn-green" onclick="runCode()">
-        <i class="fa-solid fa-play"></i> Run
-      </button>
+        <!-- Live Preview View -->
+        <div id="preview-container">
+            <iframe id="live-output"></iframe>
+        </div>
+    </main>
 
-      <button class="btn btn-secondary" onclick="loadTemplate()">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Template
-      </button>
+    <script>
+        // DOM Elements
+        const htmlCode = document.getElementById('html-code');
+        const cssCode = document.getElementById('css-code');
+        const jsCode = document.getElementById('js-code');
+        const liveOutput = document.getElementById('live-output');
+        
+        const btnCode = document.getElementById('btn-code');
+        const btnPreview = document.getElementById('btn-preview');
+        const mainArea = document.getElementById('main-area');
+        
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const codeAreas = document.querySelectorAll('.code-area');
 
-      <button class="btn btn-secondary" onclick="toggleLayout()">
-        <i class="fa-solid fa-table-columns"></i> Layout
-      </button>
+        // Live Update Function
+        function updatePreview() {
+            const html = htmlCode.value;
+            const css = `<style>${cssCode.value}</style>`;
+            const js = `<script>${jsCode.value}<\/script>`;
+            
+            const iframeDoc = liveOutput.contentDocument || liveOutput.contentWindow.document;
+            
+            iframeDoc.open();
+            iframeDoc.write(html + css + js);
+            iframeDoc.close();
+        }
 
-      <button class="btn btn-secondary" onclick="toggleFullscreen()">
-        <i class="fa-solid fa-expand"></i> Fullscreen
-      </button>
+        // Add event listeners to textareas to update live
+        [htmlCode, cssCode, jsCode].forEach(textarea => {
+            textarea.addEventListener('input', updatePreview);
+        });
 
-      <button class="btn" onclick="downloadCode()">
-        <i class="fa-solid fa-download"></i> Export HTML
-      </button>
+        // Switch between Code and Preview
+        btnCode.addEventListener('click', () => {
+            btnCode.classList.add('active');
+            btnPreview.classList.remove('active');
+            mainArea.classList.remove('show-preview');
+        });
 
-      <button class="btn btn-danger" onclick="clearAll()">
-        <i class="fa-solid fa-trash-can"></i> Clear
-      </button>
-    </div>
-  </header>
+        btnPreview.addEventListener('click', () => {
+            btnPreview.classList.add('active');
+            btnCode.classList.remove('active');
+            mainArea.classList.add('show-preview');
+            updatePreview(); // Ensure it updates when switching
+        });
 
-  <!-- Main Work Area -->
-  <div class="app-container" id="app-container">
-    
-    <!-- Code Editors Panel -->
-    <div class="editors-pane">
-      <div class="editor-tabs">
-        <button class="tab-btn active" onclick="switchTab('html')">
-          <i class="fa-brands fa-html5"></i> HTML
-        </button>
-        <button class="tab-btn" onclick="switchTab('css')">
-          <i class="fa-brands fa-css3-alt"></i> CSS
-        </button>
-        <button class="tab-btn" onclick="switchTab('js')">
-          <i class="fa-brands fa-js"></i> JavaScript
-        </button>
-      </div>
+        // Switch between HTML, CSS, JS tabs
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active classes
+                tabBtns.forEach(t => t.classList.remove('active'));
+                codeAreas.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding textarea
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.target).classList.add('active');
+            });
+        });
 
-      <div class="editor-content">
-        <textarea id="html-code" class="code-input active" placeholder="<!-- Write HTML code here -->" spellcheck="false"></textarea>
-        <textarea id="css-code" class="code-input" placeholder="/* Write CSS code here */" spellcheck="false"></textarea>
-        <textarea id="js-code" class="code-input" placeholder="// Write JavaScript code here" spellcheck="false"></textarea>
-      </div>
-    </div>
-
-    <!-- Live Preview Panel -->
-    <div class="preview-pane" id="preview-pane">
-      <div class="preview-header">
-        <span><i class="fa-solid fa-eye"></i> LIVE PREVIEW</span>
-        <span id="status-indicator" style="color: #34d399; font-size: 0.75rem;">● Live Sync Active</span>
-      </div>
-      <iframe id="preview-frame" sandbox="allow-scripts allow-modals allow-forms"></iframe>
-    </div>
-
-  </div>
-
-  <script>
-    // DOM Elements
-    const htmlEditor = document.getElementById('html-code');
-    const cssEditor = document.getElementById('css-code');
-    const jsEditor = document.getElementById('js-code');
-    const previewFrame = document.getElementById('preview-frame');
-    const autoRunCheckbox = document.getElementById('auto-run');
-    const appContainer = document.getElementById('app-container');
-    const previewPane = document.getElementById('preview-pane');
-
-    // Default Sample Template
-    const defaultHTML = `
+        // Default Code to start with
+        htmlCode.value = `
 <div class="card">
-  <h1>👋 ආයුබෝවන්!</h1>
-  <p>මෙය සජීවීව HTML, CSS සහ JS Test කළ හැකි Web App එකකි.</p>
-  <button id="btn">Click Me!</button>
+  <h1>ආයුබෝවන්! 🇱🇰</h1>
+  <p>ඔබගේ Live Code Editor එක වැඩ කිරීම ආරම්භ කර ඇත.</p>
+  <button onclick="sayHello()">Click Me</button>
 </div>`;
 
-    const defaultCSS = `
+        cssCode.value = `
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: #f0f2f5;
+  font-family: Arial, sans-serif;
   margin: 0;
 }
-
 .card {
   background: white;
-  padding: 30px 40px;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
   text-align: center;
-  max-width: 400px;
 }
-
-h1 {
-  color: #2d3748;
-  margin-bottom: 10px;
-}
-
-p {
-  color: #718096;
-  margin-bottom: 20px;
-  font-size: 15px;
-}
-
+h1 { color: #f38ba8; }
 button {
-  background-color: #4c51bf;
+  background: #89b4fa;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 20px;
   font-size: 16px;
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: transform 0.2s;
+  margin-top: 15px;
 }
+button:hover { background: #74a1f0; }`;
 
-button:hover {
-  transform: scale(1.05);
-  background-color: #434190;
+        jsCode.value = `
+function sayHello() {
+  alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් වැඩ කරනවා 🎉');
 }`;
 
-    const defaultJS = `
-document.getElementById('btn').addEventListener('click', () => {
-  alert('🎉 නියමයි! JavaScript වැඩ කරනවා!');
-});`;
-
-    // Load initial code
-    htmlEditor.value = defaultHTML;
-    cssEditor.value = defaultCSS;
-    jsEditor.value = defaultJS;
-
-    // Live Render Function
-    function runCode() {
-      const html = htmlEditor.value;
-      const css = `<style>${cssEditor.value}</style>`;
-      const js = `<script>${jsEditor.value}<\/script>`;
-
-      const combinedSource = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          ${css}
-        </head>
-        <body>
-          ${html}
-          ${js}
-        </body>
-        </html>
-      `;
-
-      const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-      iframeDoc.open();
-      iframeDoc.write(combinedSource);
-      iframeDoc.close();
-    }
-
-    // Auto update listener with debouncing
-    let timeoutId;
-    function handleAutoUpdate() {
-      if (autoRunCheckbox.checked) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(runCode, 300);
-      }
-    }
-
-    htmlEditor.addEventListener('input', handleAutoUpdate);
-    cssEditor.addEventListener('input', handleAutoUpdate);
-    jsEditor.addEventListener('input', handleAutoUpdate);
-
-    // Tab Switcher
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.code-input').forEach(input => input.classList.remove('active'));
-
-      if (tabName === 'html') {
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        htmlEditor.classList.add('active');
-      } else if (tabName === 'css') {
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        cssEditor.classList.add('active');
-      } else if (tabName === 'js') {
-        document.querySelectorAll('.tab-btn')[2].classList.add('active');
-        jsEditor.classList.add('active');
-      }
-    }
-
-    // Toggle Screen Layout (Side-by-Side vs Vertical)
-    function toggleLayout() {
-      appContainer.classList.toggle('vertical');
-    }
-
-    // Toggle Fullscreen Preview
-    function toggleFullscreen() {
-      previewPane.classList.toggle('fullscreen');
-    }
-
-    // Load Default Template
-    function loadTemplate() {
-      if (confirm('වත්මන් Codes මකා දමා Sample Template එක Load කිරීමට අවශ්‍යද?')) {
-        htmlEditor.value = defaultHTML;
-        cssEditor.value = defaultCSS;
-        jsEditor.value = defaultJS;
-        runCode();
-      }
-    }
-
-    // Clear All Editors
-    function clearAll() {
-      if (confirm('සියලුම HTML, CSS, JS Codes මකා දැමීමට අවශ්‍යද?')) {
-        htmlEditor.value = '';
-        cssEditor.value = '';
-        jsEditor.value = '';
-        runCode();
-      }
-    }
-
-    // Download Single HTML File
-    function downloadCode() {
-      const fullContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Web Project</title>
-  <style>
-${cssEditor.value}
-  </style>
-</head>
-<body>
-${htmlEditor.value}
-
-  <script>
-${jsEditor.value}
-  <\/script>
-</body>
-</html>`;
-
-      const blob = new Blob([fullContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'my-web-app.html';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // First Run
-    runCode();
-  </script>
+        // Initialize preview on load
+        updatePreview();
+    </script>
 </body>
 </html>
