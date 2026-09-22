@@ -2,7 +2,6 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <!-- Mobile සහ Tablet සඳහා හොඳින්ම පෙනීමට -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Live Web Creator</title>
     <style>
@@ -48,7 +47,6 @@
             color: #f38ba8;
         }
 
-        /* View Switcher (Code / Preview) */
         .view-switcher {
             display: flex;
             background-color: #313244;
@@ -82,7 +80,6 @@
             position: relative;
         }
 
-        /* Editor Section */
         #editor-container {
             display: flex;
             flex-direction: column;
@@ -94,11 +91,17 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Code Tabs (HTML, CSS, JS) */
-        .code-tabs {
+        /* Tab Header Section (Contains Tabs + Action Buttons) */
+        .tab-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
             background-color: #181825;
             padding: 0 10px;
+        }
+
+        .code-tabs {
+            display: flex;
         }
 
         .tab-btn {
@@ -122,6 +125,34 @@
             color: #bac2de;
         }
 
+        /* Action Buttons (Clear & Download) */
+        .action-btns {
+            display: flex;
+            gap: 15px;
+            padding-right: 10px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #a6adc8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover#btn-clear {
+            color: #f38ba8; /* Red for clear */
+            transform: scale(1.1);
+        }
+
+        .icon-btn:hover#btn-download {
+            color: #a6e3a1; /* Green for download */
+            transform: scale(1.1);
+        }
+
         /* Textareas */
         .code-area {
             flex: 1;
@@ -129,7 +160,7 @@
             background-color: #1e1e2e;
             color: #a6e3a1;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 16px; /* 16px prevents auto-zoom on mobile */
+            font-size: 16px;
             padding: 15px;
             border: none;
             outline: none;
@@ -160,7 +191,6 @@
             border: none;
         }
 
-        /* View Toggle Logic */
         main.show-preview #editor-container {
             opacity: 0;
             pointer-events: none;
@@ -185,10 +215,24 @@
     <main id="main-area">
         <!-- Code Editor View -->
         <div id="editor-container">
-            <div class="code-tabs">
-                <button class="tab-btn active" data-target="html-code">HTML</button>
-                <button class="tab-btn" data-target="css-code">CSS</button>
-                <button class="tab-btn" data-target="js-code">JS</button>
+            
+            <div class="tab-header">
+                <!-- Code Tabs -->
+                <div class="code-tabs">
+                    <button class="tab-btn active" data-target="html-code">HTML</button>
+                    <button class="tab-btn" data-target="css-code">CSS</button>
+                    <button class="tab-btn" data-target="js-code">JS</button>
+                </div>
+                
+                <!-- Action Buttons (Download & Clear) -->
+                <div class="action-btns">
+                    <button id="btn-clear" class="icon-btn" title="Clear Code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                    <button id="btn-download" class="icon-btn" title="Download Code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </button>
+                </div>
             </div>
             
             <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false"></textarea>
@@ -216,6 +260,9 @@
         const tabBtns = document.querySelectorAll('.tab-btn');
         const codeAreas = document.querySelectorAll('.code-area');
 
+        const btnClear = document.getElementById('btn-clear');
+        const btnDownload = document.getElementById('btn-download');
+
         // Live Update Function
         function updatePreview() {
             const html = htmlCode.value;
@@ -229,7 +276,7 @@
             iframeDoc.close();
         }
 
-        // Add event listeners to textareas to update live
+        // Add event listeners to textareas
         [htmlCode, cssCode, jsCode].forEach(textarea => {
             textarea.addEventListener('input', updatePreview);
         });
@@ -245,23 +292,71 @@
             btnPreview.classList.add('active');
             btnCode.classList.remove('active');
             mainArea.classList.add('show-preview');
-            updatePreview(); // Ensure it updates when switching
+            updatePreview(); 
         });
 
         // Switch between HTML, CSS, JS tabs
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Remove active classes
                 tabBtns.forEach(t => t.classList.remove('active'));
                 codeAreas.forEach(c => c.classList.remove('active'));
                 
-                // Add active class to clicked tab and corresponding textarea
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.target).classList.add('active');
             });
         });
 
-        // Default Code to start with
+        // Get Currently Active Textarea
+        function getActiveTextarea() {
+            return document.querySelector('.code-area.active');
+        }
+
+        // Clear Button Logic
+        btnClear.addEventListener('click', () => {
+            const activeArea = getActiveTextarea();
+            if (activeArea) {
+                // Confirm before clearing to prevent accidental data loss
+                if(confirm("ඔබට මෙම කේතය මකා දැමීමට අවශ්‍ය බව විශ්වාසද?")) {
+                    activeArea.value = '';
+                    updatePreview();
+                }
+            }
+        });
+
+        // Download Button Logic
+        btnDownload.addEventListener('click', () => {
+            const activeArea = getActiveTextarea();
+            if (!activeArea) return;
+
+            let content = activeArea.value;
+            let fileName = '';
+            let mimeType = 'text/plain';
+
+            // Determine file extension based on active tab
+            if (activeArea.id === 'html-code') {
+                fileName = 'index.html';
+                mimeType = 'text/html';
+            } else if (activeArea.id === 'css-code') {
+                fileName = 'style.css';
+                mimeType = 'text/css';
+            } else if (activeArea.id === 'js-code') {
+                fileName = 'script.js';
+                mimeType = 'text/javascript';
+            }
+
+            // Create Blob and trigger download
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Default Code
         htmlCode.value = `
 <div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
@@ -304,7 +399,7 @@ function sayHello() {
   alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් වැඩ කරනවා 🎉');
 }`;
 
-        // Initialize preview on load
+        // Initialize
         updatePreview();
     </script>
 </body>
