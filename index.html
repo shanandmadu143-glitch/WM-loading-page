@@ -291,7 +291,7 @@
             display: block;
         }
 
-        /* Code specific colors based on default view to keep syntax recognizable */
+        /* Code specific colors based on default view */
         #html-code { color: var(--text-main); }
         #css-code { color: var(--accent-1); }
         #js-code { color: #f9e2af; } 
@@ -307,7 +307,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            background-color: #fff; /* Web preview is naturally white */
+            background-color: #fff;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -328,6 +328,24 @@
         main.show-preview #preview-container {
             opacity: 1;
             pointer-events: auto;
+        }
+
+        /* Footer Banner */
+        .footer-banner {
+            text-align: center;
+            padding: 6px 15px;
+            font-size: 12px;
+            background-color: var(--bg-header);
+            color: var(--text-muted);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: background-color 0.3s, color 0.3s;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-banner span {
+            color: var(--accent-1);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -353,10 +371,10 @@
                     <button class="tab-btn" data-target="js-code">JS</button>
                 </div>
                 
-                <!-- Action Buttons (Settings, Clear, Download) -->
+                <!-- Action Buttons -->
                 <div class="action-btns">
                     
-                    <!-- Settings / Theme Dropdown -->
+                    <!-- Settings Dropdown -->
                     <div class="settings-wrapper">
                         <button id="btn-settings" class="icon-btn" title="Themes & Settings">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -394,6 +412,11 @@
         </div>
     </main>
 
+    <!-- Footer Banner Added Here -->
+    <footer class="footer-banner">
+        Created by <span>Yomal Lakshan</span>
+    </footer>
+
     <script>
         // DOM Elements
         const htmlCode = document.getElementById('html-code');
@@ -429,7 +452,6 @@
             option.addEventListener('click', () => {
                 const theme = option.getAttribute('data-theme');
                 document.body.setAttribute('data-theme', theme);
-                // Save theme preference to LocalStorage
                 localStorage.setItem('htmlCodesTheme', theme);
             });
         });
@@ -440,13 +462,12 @@
             document.body.setAttribute('data-theme', savedTheme);
         }
 
-        // Improved Live Update Function (Browser-like Execution)
+        // Improved Live Update Function
         function updatePreview() {
             const html = htmlCode.value;
             const css = cssCode.value;
             const js = jsCode.value;
             
-            // සැබෑ වෙබ් පිටුවක් ලෙස render වීමට සම්පූර්ණ HTML ව්‍යුහය නිර්මාණය කිරීම
             const fullDoc = `
                 <!DOCTYPE html>
                 <html lang="en">
@@ -468,16 +489,13 @@
                 </html>
             `;
             
-            // srcdoc භාවිතයෙන් iframe එක තුළට කේතය ඇතුළත් කිරීම (සැබෑ Browser Refresh එකක් මෙන් වැඩ කරයි)
             liveOutput.srcdoc = fullDoc;
         }
 
-        // Add event listeners to textareas
         [htmlCode, cssCode, jsCode].forEach(textarea => {
             textarea.addEventListener('input', updatePreview);
         });
 
-        // Switch between Code and Preview
         btnCode.addEventListener('click', () => {
             btnCode.classList.add('active');
             btnPreview.classList.remove('active');
@@ -491,7 +509,6 @@
             updatePreview(); 
         });
 
-        // Switch between HTML, CSS, JS tabs
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 tabBtns.forEach(t => t.classList.remove('active'));
@@ -502,12 +519,10 @@
             });
         });
 
-        // Get Currently Active Textarea
         function getActiveTextarea() {
             return document.querySelector('.code-area.active');
         }
 
-        // Clear Button Logic
         btnClear.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (activeArea) {
@@ -518,7 +533,6 @@
             }
         });
 
-        // Download Button Logic
         btnDownload.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (!activeArea) return;
@@ -596,7 +610,6 @@ function sayHello() {
   alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් හරියටම වැඩ කරනවා 🎉');
 }`;
 
-        // Initialize Preview on Load
         updatePreview();
     </script>
 </body>
