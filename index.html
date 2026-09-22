@@ -20,6 +20,7 @@
             --editor-bg: #1e1e2e;
             --dropdown-bg: #313244;
             --dropdown-hover: #45475a;
+            --modal-bg: rgba(17, 17, 27, 0.8);
         }
 
         [data-theme="light"] {
@@ -34,6 +35,7 @@
             --editor-bg: #ffffff;
             --dropdown-bg: #ffffff;
             --dropdown-hover: #f3f4f6;
+            --modal-bg: rgba(255, 255, 255, 0.8);
         }
 
         [data-theme="monokai"] {
@@ -48,6 +50,7 @@
             --editor-bg: #272822;
             --dropdown-bg: #3e3d32;
             --dropdown-hover: #49483e;
+            --modal-bg: rgba(30, 31, 28, 0.8);
         }
 
         [data-theme="dracula"] {
@@ -62,6 +65,7 @@
             --editor-bg: #282a36;
             --dropdown-bg: #44475a;
             --dropdown-hover: #6272a4;
+            --modal-bg: rgba(25, 26, 33, 0.8);
         }
 
         [data-theme="github"] {
@@ -76,13 +80,10 @@
             --editor-bg: #0d1117;
             --dropdown-bg: #161b22;
             --dropdown-hover: #21262d;
+            --modal-bg: rgba(1, 4, 9, 0.8);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Poppins', sans-serif;
@@ -104,249 +105,137 @@
             background-color: var(--bg-header);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             z-index: 10;
-            transition: background-color 0.3s;
         }
 
-        .logo {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .logo span {
-            color: var(--accent-1);
-        }
+        .logo { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 2px; }
+        .logo span { color: var(--accent-1); }
 
         .view-switcher {
             display: flex;
             background-color: var(--btn-bg);
             border-radius: 30px;
             padding: 4px;
-            transition: background-color 0.3s;
         }
-
         .view-switcher button {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 8px 16px; border-radius: 25px; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.3s ease;
         }
-
         .view-switcher button.active {
-            background-color: var(--accent-1);
-            color: var(--bg-header);
+            background-color: var(--accent-1); color: var(--bg-header);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         /* Main Container */
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
 
         #editor-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: opacity 0.3s ease;
+            display: flex; flex-direction: column; height: 100%; width: 100%;
+            position: absolute; top: 0; left: 0; transition: opacity 0.3s ease;
         }
 
-        /* Tab Header Section */
+        /* Tab Header */
         .tab-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--tab-header-bg);
-            padding: 0 10px;
-            transition: background-color 0.3s;
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--tab-header-bg); padding: 0 10px;
         }
-
-        .code-tabs {
-            display: flex;
-        }
-
+        .code-tabs { display: flex; }
         .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 12px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 12px 20px; font-size: 14px; font-weight: 500; cursor: pointer;
+            border-bottom: 3px solid transparent; transition: all 0.3s ease;
         }
-
-        .tab-btn.active {
-            color: var(--text-main);
-            border-bottom-color: var(--accent-2);
-        }
-
-        .tab-btn:hover {
-            color: var(--accent-1);
-        }
+        .tab-btn.active { color: var(--text-main); border-bottom-color: var(--accent-2); }
+        .tab-btn:hover { color: var(--accent-1); }
 
         /* Action Buttons */
-        .action-btns {
-            display: flex;
-            gap: 15px;
-            padding-right: 10px;
-            align-items: center;
-        }
-
+        .action-btns { display: flex; gap: 15px; padding-right: 10px; align-items: center; }
         .icon-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            position: relative;
+            background: transparent; border: none; cursor: pointer; color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;
         }
+        .icon-btn:hover { color: var(--accent-1); transform: scale(1.1); }
+        .icon-btn:hover#btn-clear { color: var(--accent-2); }
+        .icon-btn:hover#btn-settings svg { transform: rotate(90deg); }
 
-        .icon-btn:hover {
-            color: var(--accent-1);
-            transform: scale(1.1);
-        }
-
-        .icon-btn:hover#btn-clear {
-            color: var(--accent-2);
-        }
-
-        .icon-btn:hover#btn-settings svg {
-            transform: rotate(90deg);
-            transition: transform 0.3s ease;
-        }
-
-        /* Settings Dropdown */
-        .settings-wrapper {
-            position: relative;
-        }
-
+        /* Dropdown */
+        .settings-wrapper { position: relative; }
         .dropdown-menu {
-            position: absolute;
-            top: 35px;
-            right: 0;
-            background-color: var(--dropdown-bg);
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 150px;
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-            overflow: hidden;
-            border: 1px solid var(--tab-header-bg);
+            position: absolute; top: 35px; right: 0; background-color: var(--dropdown-bg);
+            border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 150px;
+            display: none; flex-direction: column; z-index: 100; border: 1px solid var(--tab-header-bg);
         }
-
-        .dropdown-menu.show {
-            display: flex;
-        }
-
-        .theme-option {
-            padding: 10px 15px;
-            font-size: 13px;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .theme-option:hover {
-            background-color: var(--dropdown-hover);
-            color: var(--accent-1);
-        }
+        .dropdown-menu.show { display: flex; }
+        .theme-option { padding: 10px 15px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .theme-option:hover { background-color: var(--dropdown-hover); color: var(--accent-1); }
 
         /* Textareas */
         .code-area {
-            flex: 1;
-            width: 100%;
-            background-color: var(--editor-bg);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-            padding: 15px;
-            border: none;
-            outline: none;
-            resize: none;
-            display: none;
-            transition: background-color 0.3s, color 0.3s;
+            flex: 1; width: 100%; background-color: var(--editor-bg); color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace; font-size: 16px; padding: 15px;
+            border: none; outline: none; resize: none; display: none; line-height: 1.5;
         }
-
-        .code-area.active {
-            display: block;
-        }
-
-        /* Code specific colors based on default view */
+        .code-area.active { display: block; }
         #html-code { color: var(--text-main); }
         #css-code { color: var(--accent-1); }
         #js-code { color: #f9e2af; } 
-
         [data-theme="light"] #js-code { color: #d97706; }
         [data-theme="monokai"] #js-code { color: #e6db74; }
         [data-theme="github"] #js-code { color: #f2cc60; }
 
-        /* Preview Section */
+        /* Preview */
         #preview-container {
-            height: 100%;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background-color: #fff;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+            background-color: #fff; opacity: 0; pointer-events: none; transition: 0.3s;
         }
+        #preview-container iframe { width: 100%; height: 100%; border: none; background-color: #ffffff; }
+        main.show-preview #editor-container { opacity: 0; pointer-events: none; }
+        main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 
-        #preview-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background-color: #ffffff;
-        }
-
-        main.show-preview #editor-container {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        main.show-preview #preview-container {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Footer Banner */
+        /* Footer */
         .footer-banner {
-            text-align: center;
-            padding: 6px 15px;
-            font-size: 12px;
-            background-color: var(--bg-header);
-            color: var(--text-muted);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-            transition: background-color 0.3s, color 0.3s;
-            letter-spacing: 0.5px;
+            text-align: center; padding: 6px 15px; font-size: 12px;
+            background-color: var(--bg-header); color: var(--text-muted);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2); z-index: 10; letter-spacing: 0.5px;
         }
+        .footer-banner span { color: var(--accent-1); font-weight: 600; }
 
-        .footer-banner span {
-            color: var(--accent-1);
-            font-weight: 600;
+        /* Custom Beautiful Alert / Confirm UI */
+        .modal-overlay {
+            position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
         }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        
+        .modal-box {
+            background: var(--bg-header); padding: 25px; border-radius: 15px; width: 90%; max-width: 400px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5); transform: scale(0.8) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center; border: 1px solid var(--btn-bg);
+        }
+        .modal-overlay.show .modal-box { transform: scale(1) translateY(0); }
+        
+        .modal-icon {
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px; font-size: 30px;
+        }
+        .modal-icon.alert { background: rgba(137, 180, 250, 0.1); color: var(--accent-1); }
+        .modal-icon.confirm { background: rgba(243, 139, 168, 0.1); color: var(--accent-2); }
+        
+        .modal-message { font-size: 16px; margin-bottom: 25px; color: var(--text-main); line-height: 1.5; }
+        
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+        .modal-btn {
+            padding: 10px 25px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: 0.2s; font-family: 'Poppins', sans-serif;
+        }
+        .btn-cancel { background: var(--btn-bg); color: var(--text-main); }
+        .btn-cancel:hover { background: var(--dropdown-hover); }
+        .btn-ok, .btn-yes { background: var(--accent-1); color: var(--bg-header); }
+        .btn-yes { background: var(--accent-2); }
+        .btn-ok:hover, .btn-yes:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
     </style>
 </head>
 <body>
@@ -360,27 +249,18 @@
     </header>
 
     <main id="main-area">
-        <!-- Code Editor View -->
         <div id="editor-container">
-            
             <div class="tab-header">
-                <!-- Code Tabs -->
                 <div class="code-tabs">
                     <button class="tab-btn active" data-target="html-code">HTML</button>
                     <button class="tab-btn" data-target="css-code">CSS</button>
                     <button class="tab-btn" data-target="js-code">JS</button>
                 </div>
                 
-                <!-- Action Buttons -->
                 <div class="action-btns">
-                    
-                    <!-- Settings Dropdown -->
                     <div class="settings-wrapper">
                         <button id="btn-settings" class="icon-btn" title="Themes & Settings">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                         </button>
                         <div id="theme-menu" class="dropdown-menu">
                             <div class="theme-option" data-theme="default">Catppuccin Dark</div>
@@ -390,11 +270,9 @@
                             <div class="theme-option" data-theme="github">GitHub Dark</div>
                         </div>
                     </div>
-
                     <button id="btn-clear" class="icon-btn" title="Clear Code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
-                    
                     <button id="btn-download" class="icon-btn" title="Download Code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
@@ -406,16 +284,27 @@
             <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false"></textarea>
         </div>
 
-        <!-- Live Preview View -->
         <div id="preview-container">
             <iframe id="live-output" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
         </div>
     </main>
 
-    <!-- Footer Banner Added Here -->
     <footer class="footer-banner">
         Created by <span>Yomal Lakshan</span>
     </footer>
+
+    <!-- Custom Modal HTML -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-icon" class="modal-icon">
+                <!-- Icon inserted via JS -->
+            </div>
+            <div id="modal-message" class="modal-message">Massage here</div>
+            <div id="modal-buttons" class="modal-buttons">
+                <!-- Buttons inserted via JS -->
+            </div>
+        </div>
+    </div>
 
     <script>
         // DOM Elements
@@ -423,30 +312,78 @@
         const cssCode = document.getElementById('css-code');
         const jsCode = document.getElementById('js-code');
         const liveOutput = document.getElementById('live-output');
-        
         const btnCode = document.getElementById('btn-code');
         const btnPreview = document.getElementById('btn-preview');
         const mainArea = document.getElementById('main-area');
-        
         const tabBtns = document.querySelectorAll('.tab-btn');
         const codeAreas = document.querySelectorAll('.code-area');
-
         const btnClear = document.getElementById('btn-clear');
         const btnDownload = document.getElementById('btn-download');
-        
         const btnSettings = document.getElementById('btn-settings');
         const themeMenu = document.getElementById('theme-menu');
         const themeOptions = document.querySelectorAll('.theme-option');
+        
+        // Modal Elements
+        const modal = document.getElementById('custom-modal');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalMessage = document.getElementById('modal-message');
+        const modalButtons = document.getElementById('modal-buttons');
+
+        // --- Custom UI Alert / Confirm System ---
+        const CustomUI = {
+            show: function(type, message, onConfirm) {
+                modalMessage.innerText = message;
+                modalButtons.innerHTML = '';
+                
+                if (type === 'alert') {
+                    modalIcon.className = 'modal-icon alert';
+                    modalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                    
+                    const btnOk = document.createElement('button');
+                    btnOk.className = 'modal-btn btn-ok';
+                    btnOk.innerText = 'OK';
+                    btnOk.onclick = () => this.close();
+                    modalButtons.appendChild(btnOk);
+                } else if (type === 'confirm') {
+                    modalIcon.className = 'modal-icon confirm';
+                    modalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                    
+                    const btnCancel = document.createElement('button');
+                    btnCancel.className = 'modal-btn btn-cancel';
+                    btnCancel.innerText = 'Cancel';
+                    btnCancel.onclick = () => this.close();
+                    
+                    const btnYes = document.createElement('button');
+                    btnYes.className = 'modal-btn btn-yes';
+                    btnYes.innerText = 'Yes, Delete';
+                    btnYes.onclick = () => {
+                        if(onConfirm) onConfirm();
+                        this.close();
+                    };
+                    
+                    modalButtons.appendChild(btnCancel);
+                    modalButtons.appendChild(btnYes);
+                }
+                modal.classList.add('show');
+            },
+            close: function() {
+                modal.classList.remove('show');
+            }
+        };
+
+        // Listen for alert messages from the Iframe
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'custom_alert') {
+                CustomUI.show('alert', event.data.message);
+            }
+        });
 
         // Theme Switcher Logic
         btnSettings.addEventListener('click', (e) => {
             e.stopPropagation();
             themeMenu.classList.toggle('show');
         });
-
-        document.addEventListener('click', () => {
-            themeMenu.classList.remove('show');
-        });
+        document.addEventListener('click', () => themeMenu.classList.remove('show'));
 
         themeOptions.forEach(option => {
             option.addEventListener('click', () => {
@@ -456,55 +393,91 @@
             });
         });
 
-        // Load saved theme
         const savedTheme = localStorage.getItem('htmlCodesTheme');
-        if (savedTheme) {
-            document.body.setAttribute('data-theme', savedTheme);
+        if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+
+        // Allow 'Tab' key spacing in Textareas
+        codeAreas.forEach(area => {
+            area.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    let start = this.selectionStart;
+                    let end = this.selectionEnd;
+                    this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+                    this.selectionStart = this.selectionEnd = start + 2;
+                    saveCode();
+                    updatePreview();
+                }
+            });
+        });
+
+        // Local Storage & Live Update
+        let updateTimeout;
+
+        function saveCode() {
+            localStorage.setItem('savedHTML', htmlCode.value);
+            localStorage.setItem('savedCSS', cssCode.value);
+            localStorage.setItem('savedJS', jsCode.value);
         }
 
-        // Improved Live Update Function
         function updatePreview() {
-            const html = htmlCode.value;
-            const css = cssCode.value;
-            const js = jsCode.value;
-            
-            const fullDoc = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>${css}</style>
-                </head>
-                <body>
-                    ${html}
+            // Debounce for performance
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                const html = htmlCode.value;
+                const css = cssCode.value;
+                const js = jsCode.value;
+                
+                // Inject script to override default alert in iframe
+                const bridgeScript = `
                     <script>
-                        try {
-                            ${js}
-                        } catch(err) {
-                            console.error(err);
-                        }
+                        window.alert = function(msg) {
+                            window.parent.postMessage({ type: 'custom_alert', message: msg }, '*');
+                        };
                     <\/script>
-                </body>
-                </html>
-            `;
-            
-            liveOutput.srcdoc = fullDoc;
+                `;
+
+                const fullDoc = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>${css}</style>
+                        ${bridgeScript}
+                    </head>
+                    <body>
+                        ${html}
+                        <script>
+                            try {
+                                ${js}
+                            } catch(err) {
+                                console.error(err);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                liveOutput.srcdoc = fullDoc;
+            }, 300); // 300ms delay
         }
 
         [htmlCode, cssCode, jsCode].forEach(textarea => {
-            textarea.addEventListener('input', updatePreview);
+            textarea.addEventListener('input', () => {
+                saveCode();
+                updatePreview();
+            });
         });
 
+        // Tabs & Views Logic
         btnCode.addEventListener('click', () => {
-            btnCode.classList.add('active');
-            btnPreview.classList.remove('active');
+            btnCode.classList.add('active'); btnPreview.classList.remove('active');
             mainArea.classList.remove('show-preview');
         });
 
         btnPreview.addEventListener('click', () => {
-            btnPreview.classList.add('active');
-            btnCode.classList.remove('active');
+            btnPreview.classList.add('active'); btnCode.classList.remove('active');
             mainArea.classList.add('show-preview');
             updatePreview(); 
         });
@@ -513,65 +486,53 @@
             btn.addEventListener('click', () => {
                 tabBtns.forEach(t => t.classList.remove('active'));
                 codeAreas.forEach(c => c.classList.remove('active'));
-                
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.target).classList.add('active');
             });
         });
 
-        function getActiveTextarea() {
-            return document.querySelector('.code-area.active');
-        }
+        function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
+        // Custom UI Confirm for Clear Button
         btnClear.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (activeArea) {
-                if(confirm("ඔබට මෙම කේතය මකා දැමීමට අවශ්‍ය බව විශ්වාසද?")) {
+                CustomUI.show('confirm', "ඔබට මෙම කේතය මකා දැමීමට අවශ්‍ය බව විශ්වාසද?", () => {
                     activeArea.value = '';
+                    saveCode();
                     updatePreview();
-                }
+                });
             }
         });
 
+        // Download Code
         btnDownload.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (!activeArea) return;
+            let content = activeArea.value; let fileName = ''; let mimeType = 'text/plain';
 
-            let content = activeArea.value;
-            let fileName = '';
-            let mimeType = 'text/plain';
-
-            if (activeArea.id === 'html-code') {
-                fileName = 'index.html';
-                mimeType = 'text/html';
-            } else if (activeArea.id === 'css-code') {
-                fileName = 'style.css';
-                mimeType = 'text/css';
-            } else if (activeArea.id === 'js-code') {
-                fileName = 'script.js';
-                mimeType = 'text/javascript';
-            }
+            if (activeArea.id === 'html-code') { fileName = 'index.html'; mimeType = 'text/html'; }
+            else if (activeArea.id === 'css-code') { fileName = 'style.css'; mimeType = 'text/css'; }
+            else if (activeArea.id === 'js-code') { fileName = 'script.js'; mimeType = 'text/javascript'; }
 
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = fileName;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
         });
 
-        // Default Code
-        htmlCode.value = `
+        // Initial Load Logic (Check Local Storage)
+        window.addEventListener('DOMContentLoaded', () => {
+            const defaultHTML = `
 <div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
   <p>ඔබගේ අලුත් HTML.codes Live Editor එක දැන් වැඩ.</p>
   <button onclick="sayHello()">Click Me</button>
 </div>`;
 
-        cssCode.value = `
+            const defaultCSS = `
 body {
   display: flex;
   justify-content: center;
@@ -605,12 +566,17 @@ button:hover {
   transform: scale(1.05);
 }`;
 
-        jsCode.value = `
+            const defaultJS = `
 function sayHello() {
   alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් හරියටම වැඩ කරනවා 🎉');
 }`;
 
-        updatePreview();
+            htmlCode.value = localStorage.getItem('savedHTML') !== null ? localStorage.getItem('savedHTML') : defaultHTML;
+            cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
+            jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
+
+            updatePreview();
+        });
     </script>
 </body>
 </html>
