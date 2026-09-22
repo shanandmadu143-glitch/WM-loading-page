@@ -1,289 +1,510 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- තත්පර 3 කින් Auto Redirect වීම සඳහා -->
-    <meta http-equiv="refresh" content="3;url=https://shanandmadu143-glitch.github.io/Calculater/">
-    <title>WM Calculator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeStudio - Live HTML/CSS/JS Playground</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-editor: #090d16;
+      --accent-blue: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-green: #34d399;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
 
-    <!-- Premium Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        body {
-            background: #050505;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Poppins', sans-serif;
-            overflow: hidden;
-            position: relative;
-        }
+    /* Header Styling */
+    header {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
 
-        /* Ambient Dynamic Background Glows */
-        .bg-glow-1, .bg-glow-2 {
-            position: absolute;
-            width: 350px;
-            height: 350px;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.25;
-            animation: floatGlow 3s ease-in-out infinite alternate;
-        }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
 
-        .bg-glow-1 {
-            background: #ff007f;
-            top: 15%;
-            left: 20%;
-        }
+    .logo i {
+      font-size: 1.5rem;
+      color: var(--accent-purple);
+    }
 
-        .bg-glow-2 {
-            background: #00f0ff;
-            bottom: 15%;
-            right: 20%;
-            animation-delay: -1.5s;
-        }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        /* Subtle Animated Tech Grid Overlay */
-        .bg-grid {
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 3s linear infinite;
-        }
+    .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
 
-        /* Glassmorphism Card Container */
-        .card {
-            position: relative;
-            z-index: 10;
-            background: rgba(15, 15, 20, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 50px 60px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8),
-                        inset 0 0 15px rgba(255, 255, 255, 0.02);
-            animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
 
-        /* Rainbow Gradient Text Effect */
-        .title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.2rem;
-            font-weight: 900;
-            letter-spacing: 3px;
-            margin-bottom: 35px;
-            background: linear-gradient(
-                90deg, 
-                #ff0055, 
-                #7a00ff, 
-                #00e5ff, 
-                #00ff66, 
-                #ffea00, 
-                #ff0055
-            );
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbowGradient 3s ease infinite;
-            filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.3));
-        }
+    .btn-secondary {
+      background: #334155;
+      color: var(--text-light);
+    }
 
-        /* Futuristic Dual-Ring Orbit Loader */
-        .loader-wrapper {
-            position: relative;
-            width: 70px;
-            height: 70px;
-            margin: 0 auto;
-        }
+    .btn-green {
+      background: #10b981;
+    }
 
-        .loader-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 3px solid transparent;
-        }
+    .btn-danger {
+      background: #ef4444;
+    }
 
-        .loader-ring-1 {
-            border-top-color: #00f0ff;
-            border-right-color: #00f0ff;
-            animation: spinClockwise 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            filter: drop-shadow(0 0 8px #00f0ff);
-        }
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-right: 10px;
+    }
 
-        .loader-ring-2 {
-            width: 80%;
-            height: 80%;
-            top: 10%;
-            left: 10%;
-            border-bottom-color: #ff007f;
-            border-left-color: #ff007f;
-            animation: spinCounterClockwise 0.9s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            filter: drop-shadow(0 0 8px #ff007f);
-        }
+    /* Main Container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      transition: flex-direction 0.3s ease;
+    }
 
-        .loader-core {
-            position: absolute;
-            width: 30%;
-            height: 30%;
-            top: 35%;
-            left: 35%;
-            background: #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #ffffff;
-            animation: pulseCore 1s ease-in-out infinite alternate;
-        }
+    .app-container.vertical {
+      flex-direction: column;
+    }
 
-        /* Created By Text Styling */
-        .created-container {
-            margin-top: 25px;
-        }
+    /* Editor Section */
+    .editors-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid var(--border-color);
+      background: var(--bg-card);
+    }
 
-        .created-by {
-            color: rgba(255, 255, 255, 0.6); /* මඳක් අඩු දීප්තියක් සහිත සුදු පැහැය */
-            font-size: 0.85rem;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
+    .editor-tabs {
+      display: flex;
+      background: #151e2e;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        .author-name {
-            color: #ffffff; /* පැහැදිලි සුදු පැහැය */
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            margin-top: 4px;
-        }
+    .tab-btn {
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
 
-        /* Redirect Bar Dynamic Progress */
-        .progress-bar-container {
-            width: 100%;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-top: 25px;
-            overflow: hidden;
-        }
+    .tab-btn.active {
+      color: var(--text-light);
+      background: var(--bg-card);
+      border-bottom-color: var(--accent-blue);
+    }
 
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #ff007f, #00f0ff);
-            animation: fillProgress 3s linear forwards;
-        }
+    .tab-btn i.fa-html5 { color: #e34f26; }
+    .tab-btn i.fa-css3-alt { color: #1572b6; }
+    .tab-btn i.fa-js { color: #f7df1e; }
 
-        /* Animations Keyframes */
-        @keyframes rainbowGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    .editor-content {
+      flex: 1;
+      position: relative;
+    }
 
-        @keyframes spinClockwise {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    textarea.code-input {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-editor);
+      color: #e2e8f0;
+      border: none;
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      display: none;
+    }
 
-        @keyframes spinCounterClockwise {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(-360deg); }
-        }
+    textarea.code-input.active {
+      display: block;
+    }
 
-        @keyframes pulseCore {
-            0% { transform: scale(0.6); opacity: 0.5; }
-            100% { transform: scale(1.1); opacity: 1; }
-        }
+    /* Output / Preview Section */
+    .preview-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      position: relative;
+    }
 
-        @keyframes floatGlow {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(20px, -20px) scale(1.2); }
-        }
+    .preview-header {
+      background: #1e293b;
+      color: var(--text-muted);
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-50px, -50px); }
-        }
+    iframe#preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+    }
 
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
+    /* Fullscreen Mode */
+    .preview-pane.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+    }
 
-        @keyframes fillProgress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-
-        /* Mobile View Compatibility */
-        @media (max-width: 600px) {
-            .card {
-                padding: 40px 30px;
-                width: 85%;
-            }
-            .title {
-                font-size: 2rem;
-            }
-            .created-by {
-                font-size: 0.75rem;
-            }
-            .author-name {
-                font-size: 1rem;
-            }
-        }
-    </style>
+    /* Responsive adjustment */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+      .editors-pane {
+        border-right: none;
+        border-bottom: 2px solid var(--border-color);
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Dynamic Background Effects -->
-    <div class="bg-grid"></div>
-    <div class="bg-glow-1"></div>
-    <div class="bg-glow-2"></div>
-
-    <!-- Main Glass Card Container -->
-    <div class="card">
-        <!-- Title with All-Color Gradient -->
-        <h1 class="title">WM CALCULATOR</h1>
-        
-        <!-- Futuristic Dual Ring Loader -->
-        <div class="loader-wrapper">
-            <div class="loader-ring loader-ring-1"></div>
-            <div class="loader-ring loader-ring-2"></div>
-            <div class="loader-core"></div>
-        </div>
-
-        <!-- Created By & Author Section -->
-        <div class="created-container">
-            <p class="created-by">Created BY :-</p>
-            <p class="author-name">Yomal Lakshan</p>
-        </div>
-
-        <!-- Progress Line for 3 Seconds -->
-        <div class="progress-bar-container">
-            <div class="progress-bar"></div>
-        </div>
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="logo">
+      <i class="fa-solid fa-code"></i>
+      <span>CodeLab Live</span>
     </div>
 
-    <!-- JavaScript Auto Redirect in 3 Seconds -->
-    <script>
-        setTimeout(function() {
-            window.location.href = "https://shanandmadu143-glitch.github.io/Calculater/";
-        }, 3000); // 3000ms = 3 Seconds
-    </script>
+    <div class="controls">
+      <div class="toggle-group">
+        <input type="checkbox" id="auto-run" checked>
+        <label for="auto-run">Auto-Sync Live</label>
+      </div>
 
+      <button class="btn btn-green" onclick="runCode()">
+        <i class="fa-solid fa-play"></i> Run
+      </button>
+
+      <button class="btn btn-secondary" onclick="loadTemplate()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Template
+      </button>
+
+      <button class="btn btn-secondary" onclick="toggleLayout()">
+        <i class="fa-solid fa-table-columns"></i> Layout
+      </button>
+
+      <button class="btn btn-secondary" onclick="toggleFullscreen()">
+        <i class="fa-solid fa-expand"></i> Fullscreen
+      </button>
+
+      <button class="btn" onclick="downloadCode()">
+        <i class="fa-solid fa-download"></i> Export HTML
+      </button>
+
+      <button class="btn btn-danger" onclick="clearAll()">
+        <i class="fa-solid fa-trash-can"></i> Clear
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Work Area -->
+  <div class="app-container" id="app-container">
+    
+    <!-- Code Editors Panel -->
+    <div class="editors-pane">
+      <div class="editor-tabs">
+        <button class="tab-btn active" onclick="switchTab('html')">
+          <i class="fa-brands fa-html5"></i> HTML
+        </button>
+        <button class="tab-btn" onclick="switchTab('css')">
+          <i class="fa-brands fa-css3-alt"></i> CSS
+        </button>
+        <button class="tab-btn" onclick="switchTab('js')">
+          <i class="fa-brands fa-js"></i> JavaScript
+        </button>
+      </div>
+
+      <div class="editor-content">
+        <textarea id="html-code" class="code-input active" placeholder="<!-- Write HTML code here -->" spellcheck="false"></textarea>
+        <textarea id="css-code" class="code-input" placeholder="/* Write CSS code here */" spellcheck="false"></textarea>
+        <textarea id="js-code" class="code-input" placeholder="// Write JavaScript code here" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <!-- Live Preview Panel -->
+    <div class="preview-pane" id="preview-pane">
+      <div class="preview-header">
+        <span><i class="fa-solid fa-eye"></i> LIVE PREVIEW</span>
+        <span id="status-indicator" style="color: #34d399; font-size: 0.75rem;">● Live Sync Active</span>
+      </div>
+      <iframe id="preview-frame" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    // DOM Elements
+    const htmlEditor = document.getElementById('html-code');
+    const cssEditor = document.getElementById('css-code');
+    const jsEditor = document.getElementById('js-code');
+    const previewFrame = document.getElementById('preview-frame');
+    const autoRunCheckbox = document.getElementById('auto-run');
+    const appContainer = document.getElementById('app-container');
+    const previewPane = document.getElementById('preview-pane');
+
+    // Default Sample Template
+    const defaultHTML = `
+<div class="card">
+  <h1>👋 ආයුබෝවන්!</h1>
+  <p>මෙය සජීවීව HTML, CSS සහ JS Test කළ හැකි Web App එකකි.</p>
+  <button id="btn">Click Me!</button>
+</div>`;
+
+    const defaultCSS = `
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.card {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+}
+
+h1 {
+  color: #2d3748;
+  margin-bottom: 10px;
+}
+
+p {
+  color: #718096;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+button {
+  background-color: #4c51bf;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  background-color: #434190;
+}`;
+
+    const defaultJS = `
+document.getElementById('btn').addEventListener('click', () => {
+  alert('🎉 නියමයි! JavaScript වැඩ කරනවා!');
+});`;
+
+    // Load initial code
+    htmlEditor.value = defaultHTML;
+    cssEditor.value = defaultCSS;
+    jsEditor.value = defaultJS;
+
+    // Live Render Function
+    function runCode() {
+      const html = htmlEditor.value;
+      const css = `<style>${cssEditor.value}</style>`;
+      const js = `<script>${jsEditor.value}<\/script>`;
+
+      const combinedSource = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          ${css}
+        </head>
+        <body>
+          ${html}
+          ${js}
+        </body>
+        </html>
+      `;
+
+      const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(combinedSource);
+      iframeDoc.close();
+    }
+
+    // Auto update listener with debouncing
+    let timeoutId;
+    function handleAutoUpdate() {
+      if (autoRunCheckbox.checked) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(runCode, 300);
+      }
+    }
+
+    htmlEditor.addEventListener('input', handleAutoUpdate);
+    cssEditor.addEventListener('input', handleAutoUpdate);
+    jsEditor.addEventListener('input', handleAutoUpdate);
+
+    // Tab Switcher
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.code-input').forEach(input => input.classList.remove('active'));
+
+      if (tabName === 'html') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        htmlEditor.classList.add('active');
+      } else if (tabName === 'css') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        cssEditor.classList.add('active');
+      } else if (tabName === 'js') {
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        jsEditor.classList.add('active');
+      }
+    }
+
+    // Toggle Screen Layout (Side-by-Side vs Vertical)
+    function toggleLayout() {
+      appContainer.classList.toggle('vertical');
+    }
+
+    // Toggle Fullscreen Preview
+    function toggleFullscreen() {
+      previewPane.classList.toggle('fullscreen');
+    }
+
+    // Load Default Template
+    function loadTemplate() {
+      if (confirm('වත්මන් Codes මකා දමා Sample Template එක Load කිරීමට අවශ්‍යද?')) {
+        htmlEditor.value = defaultHTML;
+        cssEditor.value = defaultCSS;
+        jsEditor.value = defaultJS;
+        runCode();
+      }
+    }
+
+    // Clear All Editors
+    function clearAll() {
+      if (confirm('සියලුම HTML, CSS, JS Codes මකා දැමීමට අවශ්‍යද?')) {
+        htmlEditor.value = '';
+        cssEditor.value = '';
+        jsEditor.value = '';
+        runCode();
+      }
+    }
+
+    // Download Single HTML File
+    function downloadCode() {
+      const fullContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Web Project</title>
+  <style>
+${cssEditor.value}
+  </style>
+</head>
+<body>
+${htmlEditor.value}
+
+  <script>
+${jsEditor.value}
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([fullContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my-web-app.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // First Run
+    runCode();
+  </script>
 </body>
 </html>
