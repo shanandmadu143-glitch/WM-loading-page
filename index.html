@@ -133,7 +133,7 @@
             padding: 15px;
             opacity: 1;
             visibility: visible;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         .splash-overlay.hide {
@@ -156,7 +156,7 @@
             text-align: center;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px var(--glow-color);
             position: relative;
-            animation: splashEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: splashEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes splashEntrance {
@@ -323,7 +323,7 @@
             flex-shrink: 0;
             overflow-x: auto;
         }
-        .code-tabs { display: flex; }
+        .code-tabs { display: flex; flex-shrink: 0; }
         .tab-btn {
             background: transparent; border: none; color: var(--text-muted);
             padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
@@ -335,7 +335,7 @@
         .tab-btn:hover { color: var(--accent-1); }
 
         /* Action Buttons */
-        .action-btns { display: flex; gap: 8px; padding-right: 5px; align-items: center; }
+        .action-btns { display: flex; gap: 6px; padding-right: 5px; align-items: center; flex-shrink: 0; }
         .icon-btn {
             background: transparent; border: none; cursor: pointer; color: var(--text-muted);
             display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
@@ -348,13 +348,17 @@
         .settings-wrapper { position: relative; }
         .dropdown-menu {
             position: absolute; top: 38px; right: 0; background-color: var(--dropdown-bg);
-            border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 150px;
+            border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 160px;
             display: none; flex-direction: column; z-index: 100; border: 1px solid var(--btn-bg);
             overflow: hidden;
         }
         .dropdown-menu.show { display: flex; }
-        .theme-option { padding: 8px 12px; font-size: 12px; cursor: pointer; transition: 0.2s; color: var(--text-main); }
+        .theme-option { 
+            padding: 9px 14px; font-size: 12px; cursor: pointer; transition: 0.2s; 
+            color: var(--text-main); display: flex; align-items: center; justify-content: space-between;
+        }
         .theme-option:hover { background-color: var(--dropdown-hover); color: var(--accent-1); }
+        .theme-option.active { color: var(--accent-1); font-weight: 600; }
 
         /* Code Textareas */
         .code-area {
@@ -400,7 +404,7 @@
         .modal-overlay.show { opacity: 1; visibility: visible; }
         
         .modal-box {
-            background: var(--bg-header); padding: 20px; border-radius: 16px; width: 100%; max-width: 340px;
+            background: var(--bg-header); padding: 22px 20px; border-radius: 16px; width: 100%; max-width: 340px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.88) translateY(10px);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center; border: 1px solid var(--btn-bg);
@@ -414,7 +418,7 @@
         .modal-icon.alert { background: rgba(137, 180, 250, 0.12); color: var(--accent-1); }
         .modal-icon.confirm { background: rgba(243, 139, 168, 0.12); color: var(--accent-2); }
         
-        .modal-message { font-size: 13.5px; margin-bottom: 18px; color: var(--text-main); line-height: 1.4; }
+        .modal-message { font-size: 13.5px; margin-bottom: 18px; color: var(--text-main); line-height: 1.4; word-break: break-word; }
         
         .modal-buttons { display: flex; gap: 8px; justify-content: center; }
         .modal-btn {
@@ -434,8 +438,8 @@
             .view-switcher button { padding: 4px 10px; font-size: 11px; }
             .tab-btn { padding: 8px 10px; font-size: 11px; }
             .action-btns { gap: 4px; }
-            .icon-btn { padding: 4px; }
-            .icon-btn svg { width: 18px; height: 18px; }
+            .icon-btn { padding: 5px; }
+            .icon-btn svg { width: 17px; height: 17px; }
             .code-area { font-size: 13px; padding: 10px; }
         }
     </style>
@@ -574,20 +578,10 @@
         const modalMessage = document.getElementById('modal-message');
         const modalButtons = document.getElementById('modal-buttons');
 
-        // LocalStorage wrapper to prevent quota errors in incognito mode
-        const StorageManager = {
-            set: function(key, value) {
-                try { localStorage.setItem(key, value); } catch (e) { console.warn('LocalStorage not available'); }
-            },
-            get: function(key) {
-                try { return localStorage.getItem(key); } catch (e) { return null; }
-            }
-        };
-
         // --- SPLASH SCREEN LOGIC ---
         let splashProgress = 0;
-        const totalDuration = 8000;
-        const intervalTime = 80;
+        const totalDuration = 2500; // Optimized load time (2.5s)
+        const intervalTime = 50;
         const increment = 100 / (totalDuration / intervalTime);
 
         const statusMessages = [
@@ -601,6 +595,7 @@
 
         function hideSplashScreen() {
             splashScreen.classList.add('hide');
+            setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
         }
 
         const splashInterval = setInterval(() => {
@@ -608,7 +603,7 @@
             if (splashProgress >= 100) {
                 splashProgress = 100;
                 clearInterval(splashInterval);
-                setTimeout(hideSplashScreen, 400);
+                setTimeout(hideSplashScreen, 300);
             }
 
             const currentPct = Math.floor(splashProgress);
@@ -630,7 +625,7 @@
 
         // --- FULLSCREEN TOGGLE SYSTEM ---
         btnFullscreen.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                 } else if (document.documentElement.webkitRequestFullscreen) {
@@ -649,7 +644,7 @@
         const CustomUI = {
             show: function(type, message, onConfirm) {
                 modalMessage.innerText = message;
-                modalButtons.innerHTML = ''; // Clear old buttons safely
+                modalButtons.innerHTML = '';
                 
                 if (type === 'alert') {
                     modalIcon.className = 'modal-icon alert';
@@ -687,7 +682,12 @@
             }
         };
 
-        // Listen for alert messages from iframe
+        // Close modal on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) CustomUI.close();
+        });
+
+        // Listen for alert/error messages from iframe
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'custom_alert') {
                 CustomUI.show('alert', event.data.message);
@@ -695,6 +695,23 @@
         });
 
         // Theme Switcher Logic
+        function applyTheme(theme) {
+            if (theme === 'default') {
+                document.body.removeAttribute('data-theme');
+            } else {
+                document.body.setAttribute('data-theme', theme);
+            }
+            localStorage.setItem('htmlCodesTheme', theme);
+            
+            themeOptions.forEach(opt => {
+                if (opt.getAttribute('data-theme') === theme) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
+            });
+        }
+
         btnSettings.addEventListener('click', (e) => {
             e.stopPropagation();
             themeMenu.classList.toggle('show');
@@ -704,23 +721,32 @@
         themeOptions.forEach(option => {
             option.addEventListener('click', () => {
                 const theme = option.getAttribute('data-theme');
-                document.body.setAttribute('data-theme', theme);
-                StorageManager.set('htmlCodesTheme', theme);
+                applyTheme(theme);
             });
         });
 
-        const savedTheme = StorageManager.get('htmlCodesTheme');
-        if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+        const savedTheme = localStorage.getItem('htmlCodesTheme') || 'default';
+        applyTheme(savedTheme);
 
-        // Allow 'Tab' key spacing in Textareas
+        // Smart 'Tab' Key Handling in Textareas (Single & Multi-line)
         codeAreas.forEach(area => {
             area.addEventListener('keydown', function(e) {
                 if (e.key === 'Tab') {
                     e.preventDefault();
-                    let start = this.selectionStart;
-                    let end = this.selectionEnd;
-                    this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
-                    this.selectionStart = this.selectionEnd = start + 2;
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+
+                    if (start === end) {
+                        this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 2;
+                    } else {
+                        const selectedText = this.value.substring(start, end);
+                        const lines = selectedText.split('\n');
+                        const indentedText = lines.map(line => '  ' + line).join('\n');
+                        this.value = this.value.substring(0, start) + indentedText + this.value.substring(end);
+                        this.selectionStart = start;
+                        this.selectionEnd = start + indentedText.length;
+                    }
                     saveCode();
                     updatePreview();
                 }
@@ -731,23 +757,30 @@
         let updateTimeout;
 
         function saveCode() {
-            StorageManager.set('savedHTML', htmlCode.value);
-            StorageManager.set('savedCSS', cssCode.value);
-            StorageManager.set('savedJS', jsCode.value);
+            localStorage.setItem('savedHTML', htmlCode.value);
+            localStorage.setItem('savedCSS', cssCode.value);
+            localStorage.setItem('savedJS', jsCode.value);
         }
 
-        function updatePreview() {
+        function updatePreview(immediate = false) {
             clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
+            const runUpdate = () => {
                 const html = htmlCode.value;
                 const css = cssCode.value;
                 const js = jsCode.value;
                 
-                // Alert Bridge to connect standard alerts to custom UI modal safely
+                // Safe Escaping for JS and CSS inside script/style tags
+                const safeJS = js.replace(/<\/script>/gi, '<\\/script>');
+                const safeCSS = css.replace(/<\/style>/gi, '<\\/style>');
+
                 const bridgeScript = `
                     <script>
                         window.alert = function(msg) {
                             window.parent.postMessage({ type: 'custom_alert', message: String(msg) }, '*');
+                        };
+                        window.onerror = function(msg, url, line) {
+                            window.parent.postMessage({ type: 'custom_alert', message: 'JS Error: ' + msg + ' (Line ' + line + ')' }, '*');
+                            return false;
                         };
                     <\/script>
                 `;
@@ -758,16 +791,16 @@
                     <head>
                         <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>${safeCSS}</style>
                         ${bridgeScript}
-                        <style>${css}</style>
                     </head>
                     <body>
                         ${html}
                         <script>
                             try {
-                                ${js}
+                                ${safeJS}
                             } catch(err) {
-                                console.error(err);
+                                window.parent.postMessage({ type: 'custom_alert', message: 'JS Exception: ' + err.message }, '*');
                             }
                         <\/script>
                     </body>
@@ -775,7 +808,13 @@
                 `;
                 
                 liveOutput.srcdoc = fullDoc;
-            }, 250);
+            };
+
+            if (immediate) {
+                runUpdate();
+            } else {
+                updateTimeout = setTimeout(runUpdate, 250);
+            }
         }
 
         [htmlCode, cssCode, jsCode].forEach(textarea => {
@@ -796,7 +835,7 @@
             btnPreview.classList.add('active'); 
             btnCode.classList.remove('active');
             mainArea.classList.add('show-preview');
-            updatePreview(); 
+            updatePreview(true); 
         });
 
         tabBtns.forEach(btn => {
@@ -817,873 +856,49 @@
                 CustomUI.show('confirm', "ඔබට මෙම කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?", () => {
                     activeArea.value = '';
                     saveCode();
-                    updatePreview();
+                    updatePreview(true);
                 });
             }
         });
 
-        // Download Code Action
+        // Download Code Action (Bundles complete HTML file if on HTML tab)
         btnDownload.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (!activeArea) return;
-            let content = activeArea.value; 
+
+            let content = '';
             let fileName = ''; 
             let mimeType = 'text/plain';
 
-            if (activeArea.id === 'html-code') { fileName = 'index.html'; mimeType = 'text/html'; }
-            else if (activeArea.id === 'css-code') { fileName = 'ඔබ ලබා දී ඇති කේතය (Code) ඉතාමත් මනා ලෙස නිර්මාණය කර ඇති, හොඳින් ක්‍රියාත්මක වන Live Web Editor එකකි. එහි UI/UX, Themes, LocalStorage saving සහ Custom Modal Alerts වැනි දේවල් ඉතාමත් හොඳ මට්ටමක පවතී. 
-
-එහෙත්, වඩාත් හොඳ User Experience (UX) එකක් ලබා දීම සඳහා සහ කුඩා දෝෂ (Bugs) කිහිපයක් නිරාකරණය කිරීම සඳහා පහත සඳහන් වෙනස්කම් සිදු කර ඇත:
-
-**සිදු කළ ප්‍රධාන වෙනස්කම් හා නිවැරදි කිරීම්:**
-
-1. **Splash Screen Time අඩු කිරීම:** මුල් කේතයේ Splash screen එක තත්පර 8ක් (8000ms) පෙන්වන ලෙස සකසා තිබුණි. මෙය භාවිතා කරන්නෙකුට ඉතා වෙහෙසකර විය හැකි බැවින්, එය **තත්පර 2.5 ක් (2500ms)** දක්වා අඩු කර ඇත.
-2. **Themes වල පැහැදිලි බව (Code Colors):** Light Theme සහ අනෙකුත් themes භාවිතා කරන විට HTML, CSS, JS text වල වර්ණයන් වඩාත් පැහැදිලිව පෙනෙන පරිදි CSS variables මගින් වර්ණ ක්‍රමාංකනය (Color contrast) වැඩි දියුණු කර ඇත.
-3. **Iframe Styling (Preview):** Live preview එක load වීමේදී සුදු පැහැති background එකක් එකවර දැල්වීම වළක්වා, එය smooth ලෙස පෙනෙන පරිදි transition එකක් යොදා ඇත.
-4. **Icons Alignment:** සියලුම SVG icons වඩාත් මධ්‍යගතව (Centered) පෙනෙන පරිදි CSS flexbox align-items නිවැරදි කර ඇත.
-5. **Mobile Responsiveness:** ජංගම දුරකථන වලදී (Mobile view) Editor එක සහ Menu එක වඩාත් හොඳින් දර්ශනය වීමට කුඩා CSS වෙනස්කම් සිදු කර ඇත.
-
-ඔබට අවශ්‍ය **සම්පූර්ණ සහ නිවැරදි කරන ලද 100% ක්‍රියාත්මක වන Code එක** පහතින් ලබා දී ඇත. මෙය සම්පූර්ණයෙන්ම Copy කර ඔබගේ `index.html` ගොනුවට Paste කර භාවිතා කළ හැක.
-
-```html
-<!DOCTYPE html>
+            if (activeArea.id === 'html-code') { 
+                fileName = 'index.html'; 
+                mimeType = 'text/html'; 
+                content = `<!DOCTYPE html>
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>HTML.codes - Live Web Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Project</title>
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap)');
-
-        /* Theme Variables */
-        :root {
-            /* Default Catppuccin Dark */
-            --bg-main: #1e1e2e;
-            --bg-header: #11111b;
-            --text-main: #cdd6f4;
-            --accent-1: #89b4fa;
-            --accent-2: #f38ba8;
-            --tab-header-bg: #181825;
-            --btn-bg: #313244;
-            --text-muted: #a6adc8;
-            --editor-bg: #1e1e2e;
-            --dropdown-bg: #313244;
-            --dropdown-hover: #45475a;
-            --modal-bg: rgba(17, 17, 27, 0.85);
-            --glow-color: rgba(137, 180, 250, 0.25);
-            /* Code Colors */
-            --code-html: #cdd6f4;
-            --code-css: #89b4fa;
-            --code-js: #f9e2af;
-        }
-
-        [data-theme="light"] {
-            --bg-main: #f3f4f6;
-            --bg-header: #ffffff;
-            --text-main: #1f2937;
-            --accent-1: #2563eb;
-            --accent-2: #dc2626;
-            --tab-header-bg: #e5e7eb;
-            --btn-bg: #d1d5db;
-            --text-muted: #6b7280;
-            --editor-bg: #ffffff;
-            --dropdown-bg: #ffffff;
-            --dropdown-hover: #f3f4f6;
-            --modal-bg: rgba(255, 255, 255, 0.85);
-            --glow-color: rgba(37, 99, 235, 0.15);
-            --code-html: #1f2937;
-            --code-css: #2563eb;
-            --code-js: #d97706;
-        }
-
-        [data-theme="monokai"] {
-            --bg-main: #272822;
-            --bg-header: #1e1f1c;
-            --text-main: #f8f8f2;
-            --accent-1: #a6e22e;
-            --accent-2: #f92672;
-            --tab-header-bg: #1e1f1c;
-            --btn-bg: #3e3d32;
-            --text-muted: #75715e;
-            --editor-bg: #272822;
-            --dropdown-bg: #3e3d32;
-            --dropdown-hover: #49483e;
-            --modal-bg: rgba(30, 31, 28, 0.85);
-            --glow-color: rgba(166, 226, 46, 0.2);
-            --code-html: #f8f8f2;
-            --code-css: #a6e22e;
-            --code-js: #e6db74;
-        }
-
-        [data-theme="dracula"] {
-            --bg-main: #282a36;
-            --bg-header: #191a21;
-            --text-main: #f8f8f2;
-            --accent-1: #bd93f9;
-            --accent-2: #ff79c6;
-            --tab-header-bg: #21222c;
-            --btn-bg: #44475a;
-            --text-muted: #6272a4;
-            --editor-bg: #282a36;
-            --dropdown-bg: #44475a;
-            --dropdown-hover: #6272a4;
-            --modal-bg: rgba(25, 26, 33, 0.85);
-            --glow-color: rgba(189, 147, 249, 0.25);
-            --code-html: #f8f8f2;
-            --code-css: #8be9fd;
-            --code-js: #f1fa8c;
-        }
-
-        [data-theme="github"] {
-            --bg-main: #0d1117;
-            --bg-header: #010409;
-            --text-main: #c9d1d9;
-            --accent-1: #58a6ff;
-            --accent-2: #ff7b72;
-            --tab-header-bg: #161b22;
-            --btn-bg: #21262d;
-            --text-muted: #8b949e;
-            --editor-bg: #0d1117;
-            --dropdown-bg: #161b22;
-            --dropdown-hover: #21262d;
-            --modal-bg: rgba(1, 4, 9, 0.85);
-            --glow-color: rgba(88, 166, 255, 0.2);
-            --code-html: #c9d1d9;
-            --code-css: #79c0ff;
-            --code-js: #f2cc60;
-        }
-
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            height: 100dvh;
-            width: 100vw;
-            overflow: hidden;
-            touch-action: manipulation;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-header); }
-        ::-webkit-scrollbar-thumb { background: var(--btn-bg); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-1); }
-
-        /* --- SPLASH SCREEN STYLES --- */
-        .splash-overlay {
-            position: fixed;
-            inset: 0;
-            background: #090a10;
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(137, 180, 250, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(243, 139, 168, 0.12) 0%, transparent 40%);
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .splash-overlay.hide {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .splash-card {
-            background: rgba(17, 17, 27, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px 20px;
-            width: 100%;
-            max-width: 480px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px var(--glow-color);
-            animation: splashEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes splashEntrance {
-            from { opacity: 0; transform: scale(0.92) translateY(15px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .splash-badge {
-            display: inline-block;
-            background: rgba(137, 180, 250, 0.15);
-            color: #89b4fa;
-            border: 1px solid rgba(137, 180, 250, 0.3);
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 1.2px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 14px;
-            text-transform: uppercase;
-        }
-
-        .splash-title {
-            font-size: 30px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 10px;
-            color: #ffffff;
-        }
-        .splash-title span { color: #89b4fa; }
-
-        .splash-description {
-            font-size: 12.5px;
-            color: #a6adc8;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            font-weight: 400;
-        }
-
-        .splash-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
-            margin-bottom: 22px;
-        }
-        .feature-chip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #cdd6f4;
-            font-size: 11px;
-            padding: 5px 10px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .loader-box { margin-bottom: 20px; }
-        .loader-status-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #a6adc8;
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-        .progress-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #89b4fa, #f38ba8);
-            border-radius: 10px;
-            transition: width 0.1s linear;
-            box-shadow: 0 0 10px rgba(137, 180, 250, 0.8);
-        }
-
-        .skip-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #cdd6f4;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif;
-            margin-bottom: 18px;
-        }
-        .skip-btn:hover, .skip-btn:active {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border-color: #89b4fa;
-        }
-
-        .splash-footer {
-            font-size: 11px;
-            color: #6c7086;
-            letter-spacing: 0.5px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 12px;
-        }
-        .splash-footer span { color: #89b4fa; font-weight: 600; }
-
-        /* Header UI */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 15px;
-            background-color: var(--bg-header);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            z-index: 10;
-            flex-shrink: 0;
-            gap: 10px;
-        }
-
-        .logo { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 2px; white-space: nowrap; }
-        .logo span { color: var(--accent-1); }
-
-        .view-switcher {
-            display: flex;
-            background-color: var(--btn-bg);
-            border-radius: 30px;
-            padding: 3px;
-        }
-        .view-switcher button {
-            background: transparent; border: none; color: var(--text-muted);
-            padding: 6px 16px; border-radius: 25px; font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
-            white-space: nowrap;
-        }
-        .view-switcher button.active {
-            background-color: var(--accent-1); color: var(--bg-header);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); font-weight: 600;
-        }
-
-        /* Main Container */
-        main { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative; 
-            overflow: hidden; 
-            height: 100%;
-        }
-
-        #editor-container {
-            display: flex; flex-direction: column; height: 100%; width: 100%;
-            position: absolute; top: 0; left: 0; transition: opacity 0.3s ease;
-        }
-
-        /* Tab Header */
-        .tab-header {
-            display: flex; justify-content: space-between; align-items: center;
-            background-color: var(--tab-header-bg); padding: 0 8px;
-            flex-shrink: 0;
-            overflow-x: auto;
-        }
-        .code-tabs { display: flex; }
-        .tab-btn {
-            background: transparent; border: none; color: var(--text-muted);
-            padding: 12px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
-            border-bottom: 3px solid transparent; transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        .tab-btn.active { color: var(--text-main); border-bottom-color: var(--accent-2); }
-        .tab-btn:hover { color: var(--accent-1); }
-
-        /* Action Buttons */
-        .action-btns { display: flex; gap: 8px; padding-right: 5px; align-items: center; }
-        .icon-btn {
-            background: transparent; border: none; cursor: pointer; color: var(--text-muted);
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
-            padding: 8px; border-radius: 6px;
-        }
-        .icon-btn:hover, .icon-btn:active { color: var(--accent-1); background: var(--btn-bg); }
-        .icon-btn:hover#btn-clear { color: var(--accent-2); }
-
-        /* Dropdown Menu */
-        .settings-wrapper { position: relative; }
-        .dropdown-menu {
-            position: absolute; top: 100%; right: 0; margin-top: 8px; background-color: var(--dropdown-bg);
-            border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 160px;
-            display: none; flex-direction: column; z-index: 100; border: 1px solid var(--btn-bg);
-            overflow: hidden;
-        }
-        .dropdown-menu.show { display: flex; }
-        .theme-option { padding: 10px 15px; font-size: 13px; cursor: pointer; transition: 0.2s; color: var(--text-main); }
-        .theme-option:hover { background-color: var(--dropdown-hover); color: var(--accent-1); }
-
-        /* Code Textareas */
-        .code-area {
-            flex: 1; width: 100%; background-color: var(--editor-bg);
-            font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; padding: 15px;
-            border: none; outline: none; resize: none; display: none; line-height: 1.6;
-            tab-size: 4; -moz-tab-size: 4; white-space: pre;
-            -webkit-overflow-scrolling: touch;
-            border-radius: 0;
-            overflow: auto;
-        }
-        .code-area.active { display: block; }
-        
-        /* Themed Code Colors */
-        #html-code { color: var(--code-html); }
-        #css-code { color: var(--code-css); }
-        #js-code { color: var(--code-js); } 
-
-        /* Preview Container */
-        #preview-container {
-            height: 100%; width: 100%; position: absolute; top: 0; left: 0;
-            background-color: #ffffff; opacity: 0; pointer-events: none; transition: 0.4s ease;
-        }
-        #preview-container iframe { width: 100%; height: 100%; border: none; background-color: #ffffff; }
-        main.show-preview #editor-container { opacity: 0; pointer-events: none; }
-        main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
-
-        /* Footer Banner */
-        .footer-banner {
-            text-align: center; padding: 6px 10px; font-size: 12px;
-            background-color: var(--bg-header); color: var(--text-muted);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2); z-index: 10; letter-spacing: 0.5px;
-            flex-shrink: 0;
-        }
-        .footer-banner span { color: var(--accent-1); font-weight: 600; }
-
-        /* Custom Modal UI */
-        .modal-overlay {
-            position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(6px);
-            display: flex; align-items: center; justify-content: center; z-index: 9999;
-            opacity: 0; visibility: hidden; transition: all 0.3s ease; padding: 15px;
-        }
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-        
-        .modal-box {
-            background: var(--bg-header); padding: 24px; border-radius: 16px; width: 100%; max-width: 360px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.9);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-align: center; border: 1px solid var(--btn-bg);
-        }
-        .modal-overlay.show .modal-box { transform: scale(1); }
-        
-        .modal-icon {
-            width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 15px; font-size: 24px;
-        }
-        .modal-icon.alert { background: rgba(137, 180, 250, 0.12); color: var(--accent-1); }
-        .modal-icon.confirm { background: rgba(243, 139, 168, 0.12); color: var(--accent-2); }
-        
-        .modal-message { font-size: 14px; margin-bottom: 20px; color: var(--text-main); line-height: 1.5; }
-        
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
-        .modal-btn {
-            padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
-            cursor: pointer; transition: 0.2s; font-family: 'Poppins', sans-serif;
-        }
-        .btn-cancel { background: var(--btn-bg); color: var(--text-main); }
-        .btn-cancel:hover { background: var(--dropdown-hover); }
-        .btn-ok, .btn-yes { background: var(--accent-1); color: var(--bg-header); }
-        .btn-yes { background: var(--accent-2); color: #ffffff; }
-        .btn-ok:hover, .btn-yes:hover { filter: brightness(1.1); }
-
-        /* Responsive Optimizations for Mobile */
-        @media (max-width: 480px) {
-            header { padding: 8px 12px; }
-            .logo { font-size: 16px; }
-            .view-switcher button { padding: 5px 12px; font-size: 12px; }
-            .tab-btn { padding: 10px 12px; font-size: 12px; }
-            .action-btns { gap: 4px; }
-            .icon-btn { padding: 6px; }
-            .icon-btn svg { width: 18px; height: 18px; }
-            .code-area { font-size: 13px; padding: 12px; }
-            .splash-title { font-size: 26px; }
-        }
+${cssCode.value}
     </style>
 </head>
 <body>
-
-    <!-- Animated Splash Screen -->
-    <div id="splash-screen" class="splash-overlay">
-        <div class="splash-card">
-            <div class="splash-badge">V2.0 LIVE WEB EDITOR</div>
-            <h1 class="splash-title">HTML.<span>codes</span></h1>
-            <p class="splash-description">
-                HTML, CSS සහ JavaScript කේත සජීවීව ලියා පරීක්ෂණ කිරීමට සහ නිර්මාණය කිරීමට සැකසුණු නවීන Web Editor එකකි.
-            </p>
-            
-            <div class="splash-features">
-                <div class="feature-chip"><span>⚡</span> Live Preview</div>
-                <div class="feature-chip"><span>🎨</span> 5+ IDE Themes</div>
-                <div class="feature-chip"><span>💾</span> Auto Local Save</div>
-                <div class="feature-chip"><span>📥</span> Instant Export</div>
-            </div>
-
-            <div class="loader-box">
-                <div class="loader-status-bar">
-                    <span id="splash-status">System Initializing...</span>
-                    <span id="splash-percent">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
-            </div>
-
-            <button id="skip-splash-btn" class="skip-btn">Editor එකට යන්න ➔</button>
-
-            <div class="splash-footer">
-                Created by <span>Yomal Lakshan</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Application Header -->
-    <header>
-        <div class="logo">HTML.<span>codes</span></div>
-        <div class="view-switcher">
-            <button id="btn-code" class="active">Code</button>
-            <button id="btn-preview">Live Preview</button>
-        </div>
-    </header>
-
-    <!-- Main Workspace -->
-    <main id="main-area">
-        <div id="editor-container">
-            <div class="tab-header">
-                <div class="code-tabs">
-                    <button class="tab-btn active" data-target="html-code">HTML</button>
-                    <button class="tab-btn" data-target="css-code">CSS</button>
-                    <button class="tab-btn" data-target="js-code">JS</button>
-                </div>
-                
-                <div class="action-btns">
-                    <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen">
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
-                    </button>
-                    <div class="settings-wrapper">
-                        <button id="btn-settings" class="icon-btn" title="Themes & Settings">
-                            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        </button>
-                        <div id="theme-menu" class="dropdown-menu">
-                            <div class="theme-option" data-theme="default">Catppuccin Dark</div>
-                            <div class="theme-option" data-theme="light">Light Theme</div>
-                            <div class="theme-option" data-theme="monokai">Monokai</div>
-                            <div class="theme-option" data-theme="dracula">Dracula</div>
-                            <div class="theme-option" data-theme="github">GitHub Dark</div>
-                        </div>
-                    </div>
-                    <button id="btn-clear" class="icon-btn" title="Clear Code">
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                    <button id="btn-download" class="icon-btn" title="Download File">
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    </button>
-                </div>
-            </div>
-            
-            <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-            <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-            <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-        </div>
-
-        <div id="preview-container">
-            <iframe id="live-output" sandbox="allow-scripts allow-modals allow-same-origin allow-forms"></iframe>
-        </div>
-    </main>
-
-    <!-- App Footer Banner -->
-    <footer class="footer-banner">
-        Created by <span>Yomal Lakshan</span>
-    </footer>
-
-    <!-- Custom Modal Dialog -->
-    <div id="custom-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="modal-icon" class="modal-icon"></div>
-            <div id="modal-message" class="modal-message">Message text here</div>
-            <div id="modal-buttons" class="modal-buttons"></div>
-        </div>
-    </div>
-
+${htmlCode.value}
     <script>
-        // DOM Elements
-        const splashScreen = document.getElementById('splash-screen');
-        const progressFill = document.getElementById('progress-fill');
-        const splashStatus = document.getElementById('splash-status');
-        const splashPercent = document.getElementById('splash-percent');
-        const skipSplashBtn = document.getElementById('skip-splash-btn');
-
-        const htmlCode = document.getElementById('html-code');
-        const cssCode = document.getElementById('css-code');
-        const jsCode = document.getElementById('js-code');
-        const liveOutput = document.getElementById('live-output');
-        const btnCode = document.getElementById('btn-code');
-        const btnPreview = document.getElementById('btn-preview');
-        const btnFullscreen = document.getElementById('btn-fullscreen');
-        const mainArea = document.getElementById('main-area');
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const codeAreas = document.querySelectorAll('.code-area');
-        const btnClear = document.getElementById('btn-clear');
-        const btnDownload = document.getElementById('btn-download');
-        const btnSettings = document.getElementById('btn-settings');
-        const themeMenu = document.getElementById('theme-menu');
-        const themeOptions = document.querySelectorAll('.theme-option');
-        
-        // Modal Elements
-        const modal = document.getElementById('custom-modal');
-        const modalIcon = document.getElementById('modal-icon');
-        const modalMessage = document.getElementById('modal-message');
-        const modalButtons = document.getElementById('modal-buttons');
-
-        // --- SPLASH SCREEN LOGIC (Optimized Time) ---
-        let splashProgress = 0;
-        const totalDuration = 2500; // Reduced to 2.5 seconds for better UX
-        const intervalTime = 50;
-        const increment = 100 / (totalDuration / intervalTime);
-
-        const statusMessages = [
-            { pct: 0, text: "System Initializing..." },
-            { pct: 30, text: "Compiler Engine සූදානම් කරමින්..." },
-            { pct: 60, text: "UI Themes & Editors සක්‍රිය කරමින්..." },
-            { pct: 85, text: "Live Sandbox සකසමින්..." },
-            { pct: 100, text: "සාදරයෙන් පිළිගනිමු!" }
-        ];
-
-        function hideSplashScreen() {
-            splashScreen.classList.add('hide');
-        }
-
-        const splashInterval = setInterval(() => {
-            splashProgress += increment;
-            if (splashProgress >= 100) {
-                splashProgress = 100;
-                clearInterval(splashInterval);
-                setTimeout(hideSplashScreen, 300);
+${jsCode.value}
+    <\/script>
+</body>
+</html>`;
+            } else if (activeArea.id === 'css-code') { 
+                fileName = 'style.css'; 
+                mimeType = 'text/css'; 
+                content = cssCode.value;
+            } else if (activeArea.id === 'js-code') { 
+                fileName = 'script.js'; 
+                mimeType = 'text/javascript'; 
+                content = jsCode.value;
             }
-
-            const currentPct = Math.floor(splashProgress);
-            progressFill.style.width = currentPct + '%';
-            splashPercent.innerText = currentPct + '%';
-
-            for (let i = statusMessages.length - 1; i >= 0; i--) {
-                if (currentPct >= statusMessages[i].pct) {
-                    splashStatus.innerText = statusMessages[i].text;
-                    break;
-                }
-            }
-        }, intervalTime);
-
-        skipSplashBtn.addEventListener('click', () => {
-            clearInterval(splashInterval);
-            hideSplashScreen();
-        });
-
-        // --- FULLSCREEN TOGGLE SYSTEM ---
-        btnFullscreen.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-        });
-
-        // --- CUSTOM UI ALERT / CONFIRM SYSTEM ---
-        const CustomUI = {
-            show: function(type, message, onConfirm) {
-                modalMessage.innerText = message;
-                modalButtons.innerHTML = '';
-                
-                if (type === 'alert') {
-                    modalIcon.className = 'modal-icon alert';
-                    modalIcon.innerHTML = '<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
-                    
-                    const btnOk = document.createElement('button');
-                    btnOk.className = 'modal-btn btn-ok';
-                    btnOk.innerText = 'හරි (OK)';
-                    btnOk.onclick = () => this.close();
-                    modalButtons.appendChild(btnOk);
-                } else if (type === 'confirm') {
-                    modalIcon.className = 'modal-icon confirm';
-                    modalIcon.innerHTML = '<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-                    
-                    const btnCancel = document.createElement('button');
-                    btnCancel.className = 'modal-btn btn-cancel';
-                    btnCancel.innerText = 'අවලංගු කරන්න';
-                    btnCancel.onclick = () => this.close();
-                    
-                    const btnYes = document.createElement('button');
-                    btnYes.className = 'modal-btn btn-yes';
-                    btnYes.innerText = 'ඔව්, මකා දමන්න';
-                    btnYes.onclick = () => {
-                        if(onConfirm) onConfirm();
-                        this.close();
-                    };
-                    
-                    modalButtons.appendChild(btnCancel);
-                    modalButtons.appendChild(btnYes);
-                }
-                modal.classList.add('show');
-            },
-            close: function() {
-                modal.classList.remove('show');
-            }
-        };
-
-        // Listen for alert messages from iframe
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'custom_alert') {
-                CustomUI.show('alert', event.data.message);
-            }
-        });
-
-        // Theme Switcher Logic
-        btnSettings.addEventListener('click', (e) => {
-            e.stopPropagation();
-            themeMenu.classList.toggle('show');
-        });
-        document.addEventListener('click', () => themeMenu.classList.remove('show'));
-
-        themeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const theme = option.getAttribute('data-theme');
-                document.body.setAttribute('data-theme', theme);
-                localStorage.setItem('htmlCodesTheme', theme);
-            });
-        });
-
-        const savedTheme = localStorage.getItem('htmlCodesTheme');
-        if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
-
-        // Allow 'Tab' key spacing in Textareas
-        codeAreas.forEach(area => {
-            area.addEventListener('keydown', function(e) {
-                if (e.key === 'Tab') {
-                    e.preventDefault();
-                    let start = this.selectionStart;
-                    let end = this.selectionEnd;
-                    this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-                    this.selectionStart = this.selectionEnd = start + 4;
-                    saveCode();
-                    updatePreview();
-                }
-            });
-        });
-
-        // Local Storage & Live Preview System
-        let updateTimeout;
-
-        function saveCode() {
-            localStorage.setItem('savedHTML', htmlCode.value);
-            localStorage.setItem('savedCSS', cssCode.value);
-            localStorage.setItem('savedJS', jsCode.value);
-        }
-
-        function updatePreview() {
-            clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
-                const html = htmlCode.value;
-                const css = cssCode.value;
-                const js = jsCode.value;
-                
-                const bridgeScript = `
-                    <script>
-                        window.alert = function(msg) {
-                            window.parent.postMessage({ type: 'custom_alert', message: String(msg) }, '*');
-                        };
-                    <\/script>
-                `;
-
-                const fullDoc = `
-                    <!DOCTYPE html>
-                    <html lang="si">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <style>${css}</style>
-                        ${bridgeScript}
-                    </head>
-                    <body>
-                        ${html}
-                        <script>
-                            try {
-                                ${js}
-                            } catch(err) {
-                                console.error(err);
-                            }
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-                
-                liveOutput.srcdoc = fullDoc;
-            }, 300);
-        }
-
-        [htmlCode, cssCode, jsCode].forEach(textarea => {
-            textarea.addEventListener('input', () => {
-                saveCode();
-                updatePreview();
-            });
-        });
-
-        // Tabs & View Switcher Logic
-        btnCode.addEventListener('click', () => {
-            btnCode.classList.add('active'); 
-            btnPreview.classList.remove('active');
-            mainArea.classList.remove('show-preview');
-        });
-
-        btnPreview.addEventListener('click', () => {
-            btnPreview.classList.add('active'); 
-            btnCode.classList.remove('active');
-            mainArea.classList.add('show-preview');
-            updatePreview(); 
-        });
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabBtns.forEach(t => t.classList.remove('active'));
-                codeAreas.forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.target).classList.add('active');
-            });
-        });
-
-        function getActiveTextarea() { return document.querySelector('.code-area.active'); }
-
-        // Clear Code Action
-        btnClear.addEventListener('click', () => {
-            const activeArea = getActiveTextarea();
-            if (activeArea) {
-                CustomUI.show('confirm', "ඔබට මෙම කේතය (Code) සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?", () => {
-                    activeArea.value = '';
-                    saveCode();
-                    updatePreview();
-                });
-            }
-        });
-
-        // Download Code Action
-        btnDownload.addEventListener('click', () => {
-            const activeArea = getActiveTextarea();
-            if (!activeArea) return;
-            let content = activeArea.value; 
-            let fileName = ''; 
-            let mimeType = 'text/plain';
-
-            if (activeArea.id === 'html-code') { fileName = 'index.html'; mimeType = 'text/html'; }
-            else if (activeArea.id === 'css-code') { fileName = 'style.css'; mimeType = 'text/css'; }
-            else if (activeArea.id === 'js-code') { fileName = 'script.js'; mimeType = 'text/javascript'; }
 
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
@@ -1694,6 +909,23 @@
             a.click(); 
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        });
+
+        // Global Keyboard Shortcuts (Ctrl+S / Cmd+S and Ctrl+Enter)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveCode();
+                updatePreview(true);
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (mainArea.classList.contains('show-preview')) {
+                    btnCode.click();
+                } else {
+                    btnPreview.click();
+                }
+            }
         });
 
         // Default Load Setup
@@ -1727,7 +959,7 @@
   width: 100%;
 }
 h1 { color: #f38ba8; margin-bottom: 10px; font-size: 24px; }
-p { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
+p { color: #94a3b8; font-size: 14px; }
 button {
   background: #89b4fa;
   color: #11111b;
@@ -1737,6 +969,7 @@ button {
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 15px;
   transition: 0.3s;
 }
 button:hover { 
@@ -1752,7 +985,7 @@ button:hover {
             cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
             jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
 
-            updatePreview();
+            updatePreview(true);
         });
     </script>
 </body>
