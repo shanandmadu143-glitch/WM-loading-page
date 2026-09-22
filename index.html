@@ -20,8 +20,9 @@
             --editor-bg: #1e1e2e;
             --dropdown-bg: #313244;
             --dropdown-hover: #45475a;
-            --modal-bg: rgba(17, 17, 27, 0.85);
+            --modal-bg: rgba(17, 17, 27, 0.88);
             --glow-color: rgba(137, 180, 250, 0.25);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         [data-theme="light"] {
@@ -36,8 +37,9 @@
             --editor-bg: #ffffff;
             --dropdown-bg: #ffffff;
             --dropdown-hover: #f3f4f6;
-            --modal-bg: rgba(255, 255, 255, 0.85);
+            --modal-bg: rgba(255, 255, 255, 0.88);
             --glow-color: rgba(37, 99, 235, 0.15);
+            --border-color: rgba(0, 0, 0, 0.1);
         }
 
         [data-theme="monokai"] {
@@ -52,8 +54,9 @@
             --editor-bg: #272822;
             --dropdown-bg: #3e3d32;
             --dropdown-hover: #49483e;
-            --modal-bg: rgba(30, 31, 28, 0.85);
+            --modal-bg: rgba(30, 31, 28, 0.88);
             --glow-color: rgba(166, 226, 46, 0.2);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         [data-theme="dracula"] {
@@ -68,8 +71,9 @@
             --editor-bg: #282a36;
             --dropdown-bg: #44475a;
             --dropdown-hover: #6272a4;
-            --modal-bg: rgba(25, 26, 33, 0.85);
+            --modal-bg: rgba(25, 26, 33, 0.88);
             --glow-color: rgba(189, 147, 249, 0.25);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         [data-theme="github"] {
@@ -84,8 +88,9 @@
             --editor-bg: #0d1117;
             --dropdown-bg: #161b22;
             --dropdown-hover: #21262d;
-            --modal-bg: rgba(1, 4, 9, 0.85);
+            --modal-bg: rgba(1, 4, 9, 0.88);
             --glow-color: rgba(88, 166, 255, 0.2);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         * { 
@@ -112,6 +117,13 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* SVG Vector Icon Global Alignment */
+        svg {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-header); }
@@ -133,7 +145,7 @@
             padding: 15px;
             opacity: 1;
             visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
 
         .splash-overlay.hide {
@@ -143,10 +155,10 @@
         }
 
         .splash-card {
-            background: rgba(17, 17, 27, 0.85);
+            background: rgba(17, 17, 27, 0.88);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 30px 20px;
             width: 100%;
@@ -198,7 +210,7 @@
         .splash-features {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 8px;
             justify-content: center;
             margin-bottom: 22px;
         }
@@ -207,11 +219,11 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: #cdd6f4;
             font-size: 11px;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .loader-box { margin-bottom: 20px; }
@@ -252,6 +264,9 @@
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
             margin-bottom: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         .skip-btn:hover, .skip-btn:active {
             background: rgba(255, 255, 255, 0.1);
@@ -279,9 +294,10 @@
             z-index: 10;
             flex-shrink: 0;
             gap: 10px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .logo { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+        .logo { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
         .logo span { color: var(--accent-1); }
 
         .view-switcher {
@@ -289,12 +305,16 @@
             background-color: var(--btn-bg);
             border-radius: 30px;
             padding: 3px;
+            gap: 2px;
         }
         .view-switcher button {
             background: transparent; border: none; color: var(--text-muted);
-            padding: 5px 14px; border-radius: 25px; font-size: 12px; font-weight: 500;
+            padding: 5px 12px; border-radius: 25px; font-size: 12px; font-weight: 500;
             cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .view-switcher button.active {
             background-color: var(--accent-1); color: var(--bg-header);
@@ -322,24 +342,28 @@
             background-color: var(--tab-header-bg); padding: 0 8px;
             flex-shrink: 0;
             overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
         }
-        .code-tabs { display: flex; flex-shrink: 0; }
+        .code-tabs { display: flex; flex-shrink: 0; gap: 2px; }
         .tab-btn {
             background: transparent; border: none; color: var(--text-muted);
             padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
             border-bottom: 3px solid transparent; transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .tab-btn.active { color: var(--text-main); border-bottom-color: var(--accent-2); }
         .tab-btn:hover { color: var(--accent-1); }
 
         /* Action Buttons */
-        .action-btns { display: flex; gap: 6px; padding-right: 5px; align-items: center; flex-shrink: 0; }
+        .action-btns { display: flex; gap: 4px; padding-right: 5px; align-items: center; flex-shrink: 0; }
         .icon-btn {
             background: transparent; border: none; cursor: pointer; color: var(--text-muted);
             display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
-            padding: 6px; border-radius: 6px;
+            padding: 7px; border-radius: 6px;
         }
         .icon-btn:hover, .icon-btn:active { color: var(--accent-1); background: var(--btn-bg); }
         .icon-btn:hover#btn-clear { color: var(--accent-2); }
@@ -348,8 +372,8 @@
         .settings-wrapper { position: relative; }
         .dropdown-menu {
             position: absolute; top: 38px; right: 0; background-color: var(--dropdown-bg);
-            border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 160px;
-            display: none; flex-direction: column; z-index: 100; border: 1px solid var(--btn-bg);
+            border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); width: 170px;
+            display: none; flex-direction: column; z-index: 100; border: 1px solid var(--border-color);
             overflow: hidden;
         }
         .dropdown-menu.show { display: flex; }
@@ -361,8 +385,17 @@
         .theme-option.active { color: var(--accent-1); font-weight: 600; }
 
         /* Code Textareas */
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background-color: var(--editor-bg);
+        }
+
         .code-area {
-            flex: 1; width: 100%; background-color: var(--editor-bg); color: var(--text-main);
+            flex: 1; width: 100%; height: 100%; background-color: var(--editor-bg); color: var(--text-main);
             font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; padding: 14px;
             border: none; outline: none; resize: none; display: none; line-height: 1.5;
             tab-size: 2; -moz-tab-size: 2; white-space: pre;
@@ -386,14 +419,19 @@
         main.show-preview #editor-container { opacity: 0; pointer-events: none; }
         main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 
-        /* Footer Banner */
+        /* Status Footer Banner */
         .footer-banner {
-            text-align: center; padding: 5px 10px; font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 12px; font-size: 11px;
             background-color: var(--bg-header); color: var(--text-muted);
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2); z-index: 10; letter-spacing: 0.5px;
             flex-shrink: 0;
+            border-top: 1px solid var(--border-color);
         }
         .footer-banner span { color: var(--accent-1); font-weight: 600; }
+        .editor-status { font-family: 'Fira Code', monospace; font-size: 10px; color: var(--text-muted); }
 
         /* Custom Modal UI */
         .modal-overlay {
@@ -407,7 +445,7 @@
             background: var(--bg-header); padding: 22px 20px; border-radius: 16px; width: 100%; max-width: 340px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5); transform: scale(0.88) translateY(10px);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-align: center; border: 1px solid var(--btn-bg);
+            text-align: center; border: 1px solid var(--border-color);
         }
         .modal-overlay.show .modal-box { transform: scale(1) translateY(0); }
         
@@ -431,16 +469,26 @@
         .btn-yes { background: var(--accent-2); color: #ffffff; }
         .btn-ok:hover, .btn-yes:hover { filter: brightness(1.1); }
 
+        /* Toast Message Notification */
+        .toast-notification {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--btn-bg); color: var(--text-main); padding: 8px 16px; border-radius: 20px;
+            font-size: 12px; font-weight: 500; border: 1px solid var(--accent-1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: all 0.3s ease;
+            z-index: 10000; display: flex; align-items: center; gap: 6px;
+        }
+        .toast-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
         /* Responsive Optimizations for Mobile & Tablets */
         @media (max-width: 480px) {
             header { padding: 6px 10px; }
             .logo { font-size: 15px; }
             .view-switcher button { padding: 4px 10px; font-size: 11px; }
             .tab-btn { padding: 8px 10px; font-size: 11px; }
-            .action-btns { gap: 4px; }
-            .icon-btn { padding: 5px; }
-            .icon-btn svg { width: 17px; height: 17px; }
+            .action-btns { gap: 2px; }
+            .icon-btn { padding: 6px; }
             .code-area { font-size: 13px; padding: 10px; }
+            .footer-banner { font-size: 10px; padding: 4px 8px; }
         }
     </style>
 </head>
@@ -456,10 +504,18 @@
             </p>
             
             <div class="splash-features">
-                <div class="feature-chip"><span>⚡</span> Live Preview</div>
-                <div class="feature-chip"><span>🎨</span> 5+ IDE Themes</div>
-                <div class="feature-chip"><span>💾</span> Auto Local Save</div>
-                <div class="feature-chip"><span>📥</span> Instant Export</div>
+                <div class="feature-chip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Live Preview
+                </div>
+                <div class="feature-chip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f38ba8" stroke-width="2.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> 5+ IDE Themes
+                </div>
+                <div class="feature-chip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a6e22e" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Auto Local Save
+                </div>
+                <div class="feature-chip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bd93f9" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Instant Export
+                </div>
             </div>
 
             <div class="loader-box">
@@ -472,7 +528,10 @@
                 </div>
             </div>
 
-            <button id="skip-splash-btn" class="skip-btn">Editor එකට යන්න ➔</button>
+            <button id="skip-splash-btn" class="skip-btn">
+                Editor එකට යන්න
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
 
             <div class="splash-footer">
                 Created by <span>Yomal Lakshan</span>
@@ -482,10 +541,19 @@
 
     <!-- Main Application Header -->
     <header>
-        <div class="logo">HTML.<span>codes</span></div>
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            HTML.<span>codes</span>
+        </div>
         <div class="view-switcher">
-            <button id="btn-code" class="active">Code</button>
-            <button id="btn-preview">Live Preview</button>
+            <button id="btn-code" class="active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                Code
+            </button>
+            <button id="btn-preview">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Live Preview
+            </button>
         </div>
     </header>
 
@@ -494,18 +562,30 @@
         <div id="editor-container">
             <div class="tab-header">
                 <div class="code-tabs">
-                    <button class="tab-btn active" data-target="html-code">HTML</button>
-                    <button class="tab-btn" data-target="css-code">CSS</button>
-                    <button class="tab-btn" data-target="js-code">JS</button>
+                    <button class="tab-btn active" data-target="html-code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f38ba8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        HTML
+                    </button>
+                    <button class="tab-btn" data-target="css-code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                        CSS
+                    </button>
+                    <button class="tab-btn" data-target="js-code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f9e2af" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        JS
+                    </button>
                 </div>
                 
                 <div class="action-btns">
-                    <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <button id="btn-copy" class="icon-btn" title="Copy Active Code">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <button id="btn-download" class="icon-btn" title="Download File">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
                     <div class="settings-wrapper">
                         <button id="btn-settings" class="icon-btn" title="Themes & Settings">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                         </button>
                         <div id="theme-menu" class="dropdown-menu">
                             <div class="theme-option" data-theme="default">Catppuccin Dark</div>
@@ -515,18 +595,20 @@
                             <div class="theme-option" data-theme="github">GitHub Dark</div>
                         </div>
                     </div>
-                    <button id="btn-clear" class="icon-btn" title="Clear Code">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
                     </button>
-                    <button id="btn-download" class="icon-btn" title="Download File">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <button id="btn-clear" class="icon-btn" title="Clear Code">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                 </div>
             </div>
             
-            <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-            <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-            <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            <div class="editor-wrapper">
+                <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            </div>
         </div>
 
         <div id="preview-container">
@@ -536,7 +618,8 @@
 
     <!-- App Footer Banner -->
     <footer class="footer-banner">
-        Created by <span>Yomal Lakshan</span>
+        <div>Created by <span>Yomal Lakshan</span></div>
+        <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
     </footer>
 
     <!-- Custom Modal Dialog -->
@@ -546,6 +629,12 @@
             <div id="modal-message" class="modal-message">Message text here</div>
             <div id="modal-buttons" class="modal-buttons"></div>
         </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="toast-notification">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toast-text">Text copied!</span>
     </div>
 
     <script>
@@ -563,6 +652,7 @@
         const btnCode = document.getElementById('btn-code');
         const btnPreview = document.getElementById('btn-preview');
         const btnFullscreen = document.getElementById('btn-fullscreen');
+        const btnCopy = document.getElementById('btn-copy');
         const mainArea = document.getElementById('main-area');
         const tabBtns = document.querySelectorAll('.tab-btn');
         const codeAreas = document.querySelectorAll('.code-area');
@@ -571,17 +661,28 @@
         const btnSettings = document.getElementById('btn-settings');
         const themeMenu = document.getElementById('theme-menu');
         const themeOptions = document.querySelectorAll('.theme-option');
+        const editorStatus = document.getElementById('editor-status');
         
-        // Modal Elements
+        // Modal & Toast Elements
         const modal = document.getElementById('custom-modal');
         const modalIcon = document.getElementById('modal-icon');
         const modalMessage = document.getElementById('modal-message');
         const modalButtons = document.getElementById('modal-buttons');
+        const toast = document.getElementById('toast-notification');
+        const toastText = document.getElementById('toast-text');
+
+        // --- TOAST SYSTEM ---
+        function showToast(text) {
+            toastText.innerText = text;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        }
 
         // --- SPLASH SCREEN LOGIC ---
         let splashProgress = 0;
-        const totalDuration = 2500; // Optimized load time (2.5s)
-        const intervalTime = 50;
+        let splashHidden = false;
+        const totalDuration = 2200;
+        const intervalTime = 40;
         const increment = 100 / (totalDuration / intervalTime);
 
         const statusMessages = [
@@ -594,6 +695,8 @@
         ];
 
         function hideSplashScreen() {
+            if (splashHidden) return;
+            splashHidden = true;
             splashScreen.classList.add('hide');
             setTimeout(() => { splashScreen.style.display = 'none'; }, 500);
         }
@@ -648,7 +751,7 @@
                 
                 if (type === 'alert') {
                     modalIcon.className = 'modal-icon alert';
-                    modalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+                    modalIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
                     
                     const btnOk = document.createElement('button');
                     btnOk.className = 'modal-btn btn-ok';
@@ -657,7 +760,7 @@
                     modalButtons.appendChild(btnOk);
                 } else if (type === 'confirm') {
                     modalIcon.className = 'modal-icon confirm';
-                    modalIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                    modalIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
                     
                     const btnCancel = document.createElement('button');
                     btnCancel.className = 'modal-btn btn-cancel';
@@ -682,12 +785,11 @@
             }
         };
 
-        // Close modal on backdrop click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) CustomUI.close();
         });
 
-        // Listen for alert/error messages from iframe
+        // Listen for alert/error messages from iframe sandbox
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'custom_alert') {
                 CustomUI.show('alert', event.data.message);
@@ -728,7 +830,17 @@
         const savedTheme = localStorage.getItem('htmlCodesTheme') || 'default';
         applyTheme(savedTheme);
 
-        // Smart 'Tab' Key Handling in Textareas (Single & Multi-line)
+        // Update Editor Status Bar (Lines & Chars)
+        function updateEditorStatus() {
+            const activeArea = getActiveTextarea();
+            if (!activeArea) return;
+            const text = activeArea.value;
+            const lines = text.split('\n').length;
+            const chars = text.length;
+            editorStatus.innerText = `Lines: ${lines} | Chars: ${chars}`;
+        }
+
+        // Smart 'Tab' Key Handling (Indent & Unindent)
         codeAreas.forEach(area => {
             area.addEventListener('keydown', function(e) {
                 if (e.key === 'Tab') {
@@ -736,21 +848,45 @@
                     const start = this.selectionStart;
                     const end = this.selectionEnd;
 
-                    if (start === end) {
-                        this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
-                        this.selectionStart = this.selectionEnd = start + 2;
+                    if (e.shiftKey) {
+                        // Unindent Shift+Tab
+                        if (start === end) {
+                            const lineStart = this.value.lastIndexOf('\n', start - 1) + 1;
+                            if (this.value.substring(lineStart, lineStart + 2) === '  ') {
+                                this.value = this.value.substring(0, lineStart) + this.value.substring(lineStart + 2);
+                                this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 2);
+                            }
+                        } else {
+                            const selectedText = this.value.substring(start, end);
+                            const lines = selectedText.split('\n');
+                            const unindentedLines = lines.map(line => line.startsWith('  ') ? line.substring(2) : (line.startsWith(' ') ? line.substring(1) : line));
+                            const unindentedText = unindentedLines.join('\n');
+                            this.value = this.value.substring(0, start) + unindentedText + this.value.substring(end);
+                            this.selectionStart = start;
+                            this.selectionEnd = start + unindentedText.length;
+                        }
                     } else {
-                        const selectedText = this.value.substring(start, end);
-                        const lines = selectedText.split('\n');
-                        const indentedText = lines.map(line => '  ' + line).join('\n');
-                        this.value = this.value.substring(0, start) + indentedText + this.value.substring(end);
-                        this.selectionStart = start;
-                        this.selectionEnd = start + indentedText.length;
+                        // Indent Tab
+                        if (start === end) {
+                            this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+                            this.selectionStart = this.selectionEnd = start + 2;
+                        } else {
+                            const selectedText = this.value.substring(start, end);
+                            const lines = selectedText.split('\n');
+                            const indentedText = lines.map(line => '  ' + line).join('\n');
+                            this.value = this.value.substring(0, start) + indentedText + this.value.substring(end);
+                            this.selectionStart = start;
+                            this.selectionEnd = start + indentedText.length;
+                        }
                     }
                     saveCode();
                     updatePreview();
+                    updateEditorStatus();
                 }
             });
+
+            area.addEventListener('keyup', updateEditorStatus);
+            area.addEventListener('click', updateEditorStatus);
         });
 
         // Local Storage & Live Preview System
@@ -769,7 +905,6 @@
                 const css = cssCode.value;
                 const js = jsCode.value;
                 
-                // Safe Escaping for JS and CSS inside script/style tags
                 const safeJS = js.replace(/<\/script>/gi, '<\\/script>');
                 const safeCSS = css.replace(/<\/style>/gi, '<\\/style>');
 
@@ -781,6 +916,9 @@
                         window.onerror = function(msg, url, line) {
                             window.parent.postMessage({ type: 'custom_alert', message: 'JS Error: ' + msg + ' (Line ' + line + ')' }, '*');
                             return false;
+                        };
+                        console.log = function(...args) {
+                            // forward console logs safely
                         };
                     <\/script>
                 `;
@@ -821,6 +959,7 @@
             textarea.addEventListener('input', () => {
                 saveCode();
                 updatePreview();
+                updateEditorStatus();
             });
         });
 
@@ -844,10 +983,27 @@
                 codeAreas.forEach(c => c.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.target).classList.add('active');
+                updateEditorStatus();
             });
         });
 
         function getActiveTextarea() { return document.querySelector('.code-area.active'); }
+
+        // Copy Code Action
+        btnCopy.addEventListener('click', () => {
+            const activeArea = getActiveTextarea();
+            if (activeArea && activeArea.value) {
+                navigator.clipboard.writeText(activeArea.value).then(() => {
+                    showToast('කේතය සාර්ථකව Copy විය!');
+                }).catch(() => {
+                    activeArea.select();
+                    document.execCommand('copy');
+                    showToast('කේතය Copy විය!');
+                });
+            } else {
+                showToast('Copy කිරීමට කේතයක් නොමැත!');
+            }
+        });
 
         // Clear Code Action
         btnClear.addEventListener('click', () => {
@@ -857,6 +1013,8 @@
                     activeArea.value = '';
                     saveCode();
                     updatePreview(true);
+                    updateEditorStatus();
+                    showToast('කේතය මකා දමන ලදී');
                 });
             }
         });
@@ -909,6 +1067,7 @@ ${jsCode.value}
             a.click(); 
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            showToast(`${fileName} Download වන ලදී!`);
         });
 
         // Global Keyboard Shortcuts (Ctrl+S / Cmd+S and Ctrl+Enter)
@@ -917,6 +1076,7 @@ ${jsCode.value}
                 e.preventDefault();
                 saveCode();
                 updatePreview(true);
+                showToast('කේතය සුරකින ලදී!');
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
@@ -986,6 +1146,7 @@ button:hover {
             jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
 
             updatePreview(true);
+            updateEditorStatus();
         });
     </script>
 </body>
