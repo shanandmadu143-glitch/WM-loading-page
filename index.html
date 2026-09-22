@@ -3,9 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Live Web Creator</title>
+    <title>HTML.codes - Live Web Editor</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        /* Theme Variables */
+        :root {
+            --bg-main: #1e1e2e;
+            --bg-header: #11111b;
+            --text-main: #cdd6f4;
+            --accent-1: #89b4fa;
+            --accent-2: #f38ba8;
+            --tab-header-bg: #181825;
+            --btn-bg: #313244;
+            --text-muted: #a6adc8;
+            --editor-bg: #1e1e2e;
+            --dropdown-bg: #313244;
+            --dropdown-hover: #45475a;
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f3f4f6;
+            --bg-header: #ffffff;
+            --text-main: #1f2937;
+            --accent-1: #3b82f6;
+            --accent-2: #ef4444;
+            --tab-header-bg: #e5e7eb;
+            --btn-bg: #d1d5db;
+            --text-muted: #6b7280;
+            --editor-bg: #ffffff;
+            --dropdown-bg: #ffffff;
+            --dropdown-hover: #f3f4f6;
+        }
+
+        [data-theme="monokai"] {
+            --bg-main: #272822;
+            --bg-header: #1e1f1c;
+            --text-main: #f8f8f2;
+            --accent-1: #a6e22e;
+            --accent-2: #f92672;
+            --tab-header-bg: #1e1f1c;
+            --btn-bg: #3e3d32;
+            --text-muted: #75715e;
+            --editor-bg: #272822;
+            --dropdown-bg: #3e3d32;
+            --dropdown-hover: #49483e;
+        }
+
+        [data-theme="dracula"] {
+            --bg-main: #282a36;
+            --bg-header: #191a21;
+            --text-main: #f8f8f2;
+            --accent-1: #bd93f9;
+            --accent-2: #ff79c6;
+            --tab-header-bg: #21222c;
+            --btn-bg: #44475a;
+            --text-muted: #6272a4;
+            --editor-bg: #282a36;
+            --dropdown-bg: #44475a;
+            --dropdown-hover: #6272a4;
+        }
+
+        [data-theme="github"] {
+            --bg-main: #0d1117;
+            --bg-header: #010409;
+            --text-main: #c9d1d9;
+            --accent-1: #58a6ff;
+            --accent-2: #ff7b72;
+            --tab-header-bg: #161b22;
+            --btn-bg: #21262d;
+            --text-muted: #8b949e;
+            --editor-bg: #0d1117;
+            --dropdown-bg: #161b22;
+            --dropdown-hover: #21262d;
+        }
 
         * {
             box-sizing: border-box;
@@ -15,12 +86,13 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #1e1e2e;
-            color: #cdd6f4;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Header & Switcher UI */
@@ -29,35 +101,37 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background-color: #11111b;
+            background-color: var(--bg-header);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             z-index: 10;
+            transition: background-color 0.3s;
         }
 
         .logo {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
-            color: #89b4fa;
+            color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 2px;
         }
 
         .logo span {
-            color: #f38ba8;
+            color: var(--accent-1);
         }
 
         .view-switcher {
             display: flex;
-            background-color: #313244;
+            background-color: var(--btn-bg);
             border-radius: 30px;
             padding: 4px;
+            transition: background-color 0.3s;
         }
 
         .view-switcher button {
             background: transparent;
             border: none;
-            color: #a6adc8;
+            color: var(--text-muted);
             padding: 8px 16px;
             border-radius: 25px;
             font-size: 14px;
@@ -67,9 +141,9 @@
         }
 
         .view-switcher button.active {
-            background-color: #89b4fa;
-            color: #11111b;
-            box-shadow: 0 2px 10px rgba(137, 180, 250, 0.4);
+            background-color: var(--accent-1);
+            color: var(--bg-header);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         /* Main Container */
@@ -91,13 +165,14 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Tab Header Section (Contains Tabs + Action Buttons) */
+        /* Tab Header Section */
         .tab-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #181825;
+            background-color: var(--tab-header-bg);
             padding: 0 10px;
+            transition: background-color 0.3s;
         }
 
         .code-tabs {
@@ -107,7 +182,7 @@
         .tab-btn {
             background: transparent;
             border: none;
-            color: #6c7086;
+            color: var(--text-muted);
             padding: 12px 20px;
             font-size: 14px;
             font-weight: 500;
@@ -117,48 +192,91 @@
         }
 
         .tab-btn.active {
-            color: #cdd6f4;
-            border-bottom-color: #f38ba8;
+            color: var(--text-main);
+            border-bottom-color: var(--accent-2);
         }
 
         .tab-btn:hover {
-            color: #bac2de;
+            color: var(--accent-1);
         }
 
-        /* Action Buttons (Clear & Download) */
+        /* Action Buttons */
         .action-btns {
             display: flex;
             gap: 15px;
             padding-right: 10px;
+            align-items: center;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
             cursor: pointer;
-            color: #a6adc8;
+            color: var(--text-muted);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            color: var(--accent-1);
+            transform: scale(1.1);
         }
 
         .icon-btn:hover#btn-clear {
-            color: #f38ba8; /* Red for clear */
-            transform: scale(1.1);
+            color: var(--accent-2);
         }
 
-        .icon-btn:hover#btn-download {
-            color: #a6e3a1; /* Green for download */
-            transform: scale(1.1);
+        .icon-btn:hover#btn-settings svg {
+            transform: rotate(90deg);
+            transition: transform 0.3s ease;
+        }
+
+        /* Settings Dropdown */
+        .settings-wrapper {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 35px;
+            right: 0;
+            background-color: var(--dropdown-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 150px;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid var(--tab-header-bg);
+        }
+
+        .dropdown-menu.show {
+            display: flex;
+        }
+
+        .theme-option {
+            padding: 10px 15px;
+            font-size: 13px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .theme-option:hover {
+            background-color: var(--dropdown-hover);
+            color: var(--accent-1);
         }
 
         /* Textareas */
         .code-area {
             flex: 1;
             width: 100%;
-            background-color: #1e1e2e;
-            color: #a6e3a1;
+            background-color: var(--editor-bg);
+            color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
             padding: 15px;
@@ -166,11 +284,21 @@
             outline: none;
             resize: none;
             display: none;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .code-area.active {
             display: block;
         }
+
+        /* Code specific colors based on default view to keep syntax recognizable */
+        #html-code { color: var(--text-main); }
+        #css-code { color: var(--accent-1); }
+        #js-code { color: #f9e2af; } 
+
+        [data-theme="light"] #js-code { color: #d97706; }
+        [data-theme="monokai"] #js-code { color: #e6db74; }
+        [data-theme="github"] #js-code { color: #f2cc60; }
 
         /* Preview Section */
         #preview-container {
@@ -179,7 +307,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            background-color: #fff;
+            background-color: #fff; /* Web preview is naturally white */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -189,6 +317,7 @@
             width: 100%;
             height: 100%;
             border: none;
+            background-color: #ffffff;
         }
 
         main.show-preview #editor-container {
@@ -205,7 +334,7 @@
 <body>
 
     <header>
-        <div class="logo">Web<span>Creator</span></div>
+        <div class="logo">HTML.<span>codes</span></div>
         <div class="view-switcher">
             <button id="btn-code" class="active">Code</button>
             <button id="btn-preview">Live Preview</button>
@@ -224,11 +353,30 @@
                     <button class="tab-btn" data-target="js-code">JS</button>
                 </div>
                 
-                <!-- Action Buttons (Download & Clear) -->
+                <!-- Action Buttons (Settings, Clear, Download) -->
                 <div class="action-btns">
+                    
+                    <!-- Settings / Theme Dropdown -->
+                    <div class="settings-wrapper">
+                        <button id="btn-settings" class="icon-btn" title="Themes & Settings">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                        <div id="theme-menu" class="dropdown-menu">
+                            <div class="theme-option" data-theme="default">Catppuccin Dark</div>
+                            <div class="theme-option" data-theme="light">Light Theme</div>
+                            <div class="theme-option" data-theme="monokai">Monokai</div>
+                            <div class="theme-option" data-theme="dracula">Dracula</div>
+                            <div class="theme-option" data-theme="github">GitHub Dark</div>
+                        </div>
+                    </div>
+
                     <button id="btn-clear" class="icon-btn" title="Clear Code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
+                    
                     <button id="btn-download" class="icon-btn" title="Download Code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
@@ -236,13 +384,13 @@
             </div>
             
             <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false"></textarea>
-            <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" style="color:#89dceb;"></textarea>
-            <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" style="color:#f9e2af;"></textarea>
+            <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false"></textarea>
+            <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false"></textarea>
         </div>
 
         <!-- Live Preview View -->
         <div id="preview-container">
-            <iframe id="live-output"></iframe>
+            <iframe id="live-output" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
         </div>
     </main>
 
@@ -262,18 +410,66 @@
 
         const btnClear = document.getElementById('btn-clear');
         const btnDownload = document.getElementById('btn-download');
+        
+        const btnSettings = document.getElementById('btn-settings');
+        const themeMenu = document.getElementById('theme-menu');
+        const themeOptions = document.querySelectorAll('.theme-option');
 
-        // Live Update Function
+        // Theme Switcher Logic
+        btnSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            themeMenu.classList.remove('show');
+        });
+
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.getAttribute('data-theme');
+                document.body.setAttribute('data-theme', theme);
+                // Save theme preference to LocalStorage
+                localStorage.setItem('htmlCodesTheme', theme);
+            });
+        });
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('htmlCodesTheme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+        }
+
+        // Improved Live Update Function (Browser-like Execution)
         function updatePreview() {
             const html = htmlCode.value;
-            const css = `<style>${cssCode.value}</style>`;
-            const js = `<script>${jsCode.value}<\/script>`;
+            const css = cssCode.value;
+            const js = jsCode.value;
             
-            const iframeDoc = liveOutput.contentDocument || liveOutput.contentWindow.document;
+            // සැබෑ වෙබ් පිටුවක් ලෙස render වීමට සම්පූර්ණ HTML ව්‍යුහය නිර්මාණය කිරීම
+            const fullDoc = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>${css}</style>
+                </head>
+                <body>
+                    ${html}
+                    <script>
+                        try {
+                            ${js}
+                        } catch(err) {
+                            console.error(err);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
             
-            iframeDoc.open();
-            iframeDoc.write(html + css + js);
-            iframeDoc.close();
+            // srcdoc භාවිතයෙන් iframe එක තුළට කේතය ඇතුළත් කිරීම (සැබෑ Browser Refresh එකක් මෙන් වැඩ කරයි)
+            liveOutput.srcdoc = fullDoc;
         }
 
         // Add event listeners to textareas
@@ -315,7 +511,6 @@
         btnClear.addEventListener('click', () => {
             const activeArea = getActiveTextarea();
             if (activeArea) {
-                // Confirm before clearing to prevent accidental data loss
                 if(confirm("ඔබට මෙම කේතය මකා දැමීමට අවශ්‍ය බව විශ්වාසද?")) {
                     activeArea.value = '';
                     updatePreview();
@@ -332,7 +527,6 @@
             let fileName = '';
             let mimeType = 'text/plain';
 
-            // Determine file extension based on active tab
             if (activeArea.id === 'html-code') {
                 fileName = 'index.html';
                 mimeType = 'text/html';
@@ -344,7 +538,6 @@
                 mimeType = 'text/javascript';
             }
 
-            // Create Blob and trigger download
             const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -360,7 +553,7 @@
         htmlCode.value = `
 <div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
-  <p>ඔබගේ Live Code Editor එක වැඩ කිරීම ආරම්භ කර ඇත.</p>
+  <p>ඔබගේ අලුත් HTML.codes Live Editor එක දැන් වැඩ.</p>
   <button onclick="sayHello()">Click Me</button>
 </div>`;
 
@@ -391,15 +584,19 @@ button {
   border-radius: 5px;
   cursor: pointer;
   margin-top: 15px;
+  transition: 0.3s;
 }
-button:hover { background: #74a1f0; }`;
+button:hover { 
+  background: #74a1f0; 
+  transform: scale(1.05);
+}`;
 
         jsCode.value = `
 function sayHello() {
-  alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් වැඩ කරනවා 🎉');
+  alert('සාර්ථකයි! ඔයාගෙ JavaScript එකත් හරියටම වැඩ කරනවා 🎉');
 }`;
 
-        // Initialize
+        // Initialize Preview on Load
         updatePreview();
     </script>
 </body>
