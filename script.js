@@ -66,7 +66,7 @@ function getActiveType() {
 // Splash Screen Setup
 let splashProgress = 0;
 let splashHidden = false;
-const totalDuration = 1800;
+const totalDuration = 1500;
 const intervalTime = 30;
 const increment = 100 / (totalDuration / intervalTime);
 
@@ -221,7 +221,7 @@ fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
 applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
 applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
 
-// Editor Line & Character Counter
+// Optimized Editor Line & Character Counter (Lag-free using split('\n'))
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
 let statusUpdatePending = false;
@@ -232,10 +232,7 @@ function updateEditorStatus() {
         const activeArea = getActiveTextarea();
         if (activeArea) {
             const text = activeArea.value;
-            let lines = 1;
-            for (let i = 0; i < text.length; i++) {
-                if (text[i] === '\n') lines++;
-            }
+            const lines = text ? text.split('\n').length : 1;
             editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
         }
         statusUpdatePending = false;
@@ -282,10 +279,10 @@ codeAreas.forEach(area => {
             scheduleSync();
             updateEditorStatus();
         }
-    });
+    }, { passive: false });
 });
 
-// Save to Local Storage & Render Live Preview
+// Save to Local Storage & Render Live Preview (Optimized Debounce)
 let syncTimeout = null;
 
 function saveCode() {
@@ -348,7 +345,7 @@ function scheduleSync(immediate = false) {
         syncTimeout = setTimeout(() => {
             saveCode();
             renderPreview();
-        }, 350);
+        }, 400);
     }
 }
 
@@ -385,8 +382,7 @@ tabBtns.forEach(btn => {
 
 // Process Opened File Content & Set to Editor Tab
 function processOpenedFile(name, content, handle = null) {
-    const nameParts = name.split('.');
-    const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : '';
+    const ext = name.split('.').pop().toLowerCase();
     let targetType = 'html';
     
     if (ext === 'css') {
@@ -399,16 +395,13 @@ function processOpenedFile(name, content, handle = null) {
         targetType = getActiveType();
     }
 
-    // Switch to target tab
     const targetTabBtn = document.querySelector(`.tab-btn[data-target="${targetType}-code"]`);
     if (targetTabBtn) targetTabBtn.click();
 
-    // Set textarea content
     if (targetType === 'html') htmlCode.value = content;
     else if (targetType === 'css') cssCode.value = content;
     else if (targetType === 'js') jsCode.value = content;
 
-    // Save File Handle & File Name
     fileHandles[targetType] = handle;
     fileNames[targetType] = name;
 
@@ -466,40 +459,38 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
 });
 
-// Auto Direct Save File Feature (Fixed for All Browsers)
+// Auto Direct Save File Feature
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
     const content = activeArea ? activeArea.value : '';
+    const currentHandle = fileHandles[type];
     const defaultName = fileNames[type] || (type === 'html' ? 'index.html' : type === 'css' ? 'style.css' : 'script.js');
 
-    // LocalStorage Sync
     saveCode();
 
-    // 1. Try modern File System API if available (Chrome, Edge, Desktop Browsers)
+    if (currentHandle && 'createWritable' in currentHandle) {
+        try {
+            let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
+            if (perm !== 'granted') {
+                perm = await currentHandle.requestPermission({ mode: 'readwrite' });
+            }
+            if (perm === 'granted') {
+                const writable = await currentHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
+                showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
+                return;
+            }
+        } catch (err) {
+            console.error("Direct handle save failed:", err);
+        }
+    }
+
     if ('showSaveFilePicker' in window) {
         try {
-            const currentHandle = fileHandles[type];
-            
-            // If File Handle exists, direct auto-save back to that original file
-            if (currentHandle && 'createWritable' in currentHandle) {
-                let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
-                if (perm !== 'granted') {
-                    perm = await currentHandle.requestPermission({ mode: 'readwrite' });
-                }
-                if (perm === 'granted') {
-                    const writable = await currentHandle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                    showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
-                    return;
-                }
-            }
-
-            // Fallback to Save File Picker API to choose a location
             const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
             const ext = type === 'html' ? '.html' : type === 'css' ? '.css' : '.js';
-            
             const handle = await window.showSaveFilePicker({
                 suggestedName: defaultName,
                 types: [{
@@ -511,20 +502,17 @@ async function saveActiveFile() {
             await writable.write(content);
             await writable.close();
 
-            // Store new Handle for future auto-saves
             fileHandles[type] = handle;
             fileNames[type] = handle.name;
 
             showToast(`"${handle.name}" සාර්ථකව සුරකින ලදී!`);
             return;
-            
         } catch (err) {
-            if (err.name === 'AbortError') return; // User Cancelled Dialog
-            console.warn("File System Access API Failed. Falling back to simple download.", err);
+            if (err.name === 'AbortError') return;
+            console.error("SaveFilePicker failed:", err);
         }
     }
 
-    // 2. Universal Fallback for older browsers, Firefox, Safari & Mobile devices
     executeDownload(content, defaultName, type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript');
 }
 
@@ -534,23 +522,17 @@ btnSaveFile.addEventListener('click', saveActiveFile);
 btnCopy.addEventListener('click', () => {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(activeArea.value).then(() => {
-                showToast('කේතය සාර්ථකව Copy විය!');
-            }).catch(() => fallbackCopy(activeArea));
-        } else {
-            fallbackCopy(activeArea);
-        }
+        navigator.clipboard.writeText(activeArea.value).then(() => {
+            showToast('කේතය සාර්ථකව Copy විය!');
+        }).catch(() => {
+            activeArea.select();
+            document.execCommand('copy');
+            showToast('කේතය Copy විය!');
+        });
     } else {
         showToast('Copy කිරීමට කේතයක් නොමැත!');
     }
 });
-
-function fallbackCopy(activeArea) {
-    activeArea.select();
-    document.execCommand('copy');
-    showToast('කේතය Copy විය!');
-}
 
 // Clear Code Feature
 btnClear.addEventListener('click', () => {
@@ -572,7 +554,6 @@ downloadModal.addEventListener('click', (e) => {
     if (e.target === downloadModal) downloadModal.classList.remove('show');
 });
 
-// Universal File Download Function with Memory Cleanup
 function executeDownload(content, fileName, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -582,12 +563,6 @@ function executeDownload(content, fileName, mimeType) {
     document.body.appendChild(a); 
     a.click(); 
     document.body.removeChild(a);
-    
-    // Revoke memory URL after slight delay
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 1000);
-    
     downloadModal.classList.remove('show');
     showToast(`${fileName} Download වන ලදී!`);
 }
