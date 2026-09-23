@@ -1,857 +1,714 @@
-// Global App & Error Logger System
-let errorLogs = [];
-let lastRenderedHash = '';
-
-// Cached DOM Elements
-const splashScreen = document.getElementById('splash-screen');
-const progressFill = document.getElementById('progress-fill');
-const splashStatus = document.getElementById('splash-status');
-const splashPercent = document.getElementById('splash-percent');
-const skipSplashBtn = document.getElementById('skip-splash-btn');
-
-const htmlCode = document.getElementById('html-code');
-const cssCode = document.getElementById('css-code');
-const jsCode = document.getElementById('js-code');
-const liveOutput = document.getElementById('live-output');
-const btnCode = document.getElementById('btn-code');
-const btnPreview = document.getElementById('btn-preview');
-const btnOpenFile = document.getElementById('btn-open-file');
-const btnSaveFile = document.getElementById('btn-save-file');
-const fileInput = document.getElementById('file-input');
-const mainArea = document.getElementById('main-area');
-const tabBtns = document.querySelectorAll('.tab-btn');
-const codeAreas = document.querySelectorAll('.code-area');
-const btnSettings = document.getElementById('btn-settings');
-const themeCards = document.querySelectorAll('.theme-card');
-const editorStatus = document.getElementById('editor-status');
-const fontSizeSelect = document.getElementById('font-size-select');
-const btnFloatingCopy = document.getElementById('btn-floating-copy');
-const btnFloatingDelete = document.getElementById('btn-floating-delete');
-const syncDot = document.querySelector('.sync-dot');
-
-// Icons for Copy and Paste states
-const copyIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-const pasteIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
-
-// Settings & Error Modal Action Elements
-const modalBtnDownload = document.getElementById('modal-btn-download');
-const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
-const modalBtnErrors = document.getElementById('modal-btn-errors');
-const errorBadge = document.getElementById('error-badge');
-
-const modal = document.getElementById('custom-modal');
-const modalIcon = document.getElementById('modal-icon');
-const modalMessage = document.getElementById('modal-message');
-const modalButtons = document.getElementById('modal-buttons');
-
-const downloadModal = document.getElementById('download-modal');
-const closeDownloadModal = document.getElementById('close-download-modal');
-
-const settingsModal = document.getElementById('settings-modal');
-const closeSettingsModal = document.getElementById('close-settings-modal');
-
-const errorModal = document.getElementById('error-modal');
-const closeErrorModal = document.getElementById('close-error-modal');
-const errorListContainer = document.getElementById('error-list-container');
-const btnClearErrors = document.getElementById('btn-clear-errors');
-const btnExportErrors = document.getElementById('btn-export-errors');
-
-const toast = document.getElementById('toast-notification');
-const toastText = document.getElementById('toast-text');
-
-// Active File Handles Store for Native System Access
-const fileHandles = { html: null, css: null, js: null };
-
-// Virtual File Management
-const virtualFiles = {
-    html: { name: 'index.html', mime: 'text/html' },
-    css: { name: 'style.css', mime: 'text/css' },
-    js: { name: 'script.js', mime: 'text/javascript' }
-};
-
-// Toast Notification System
-let toastTimeout;
-function showToast(text) {
-    toastText.innerText = text;
-    toast.classList.add('show');
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2200);
+/* Theme Variables */
+:root {
+    --bg-main: #1e1e2e;
+    --bg-header: #11111b;
+    --text-main: #cdd6f4;
+    --accent-1: #89b4fa;
+    --accent-2: #f38ba8;
+    --tab-header-bg: #181825;
+    --btn-bg: #313244;
+    --text-muted: #a6adc8;
+    --editor-bg: #1e1e2e;
+    --dropdown-bg: #313244;
+    --dropdown-hover: #45475a;
+    --modal-bg: rgba(17, 17, 27, 0.82);
+    --glow-color: rgba(137, 180, 250, 0.2);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// Active Tab Helper ('html', 'css', 'js')
-function getActiveType() {
-    const activeBtn = document.querySelector('.tab-btn.active');
-    if (!activeBtn) return 'html';
-    const target = activeBtn.dataset.target;
-    if (target === 'css-code') return 'css';
-    if (target === 'js-code') return 'js';
-    return 'html';
+[data-theme="light"] {
+    --bg-main: #f3f4f6;
+    --bg-header: #ffffff;
+    --text-main: #1f2937;
+    --accent-1: #2563eb;
+    --accent-2: #dc2626;
+    --tab-header-bg: #e5e7eb;
+    --btn-bg: #d1d5db;
+    --text-muted: #6b7280;
+    --editor-bg: #ffffff;
+    --dropdown-bg: #ffffff;
+    --dropdown-hover: #f3f4f6;
+    --modal-bg: rgba(255, 255, 255, 0.82);
+    --glow-color: rgba(37, 99, 235, 0.12);
+    --border-color: rgba(0, 0, 0, 0.08);
 }
 
-function getActiveTextarea() { return document.querySelector('.code-area.active'); }
-
-// Update Floating Icon to Copy or Paste based on empty text
-function updateFloatingIcon() {
-    const activeArea = getActiveTextarea();
-    if (activeArea) {
-        if (activeArea.value.trim() === '') {
-            btnFloatingCopy.innerHTML = pasteIconSVG;
-            btnFloatingCopy.setAttribute('title', 'කේතය Paste කරන්න (Paste Code)');
-            btnFloatingCopy.dataset.action = 'paste';
-        } else {
-            btnFloatingCopy.innerHTML = copyIconSVG;
-            btnFloatingCopy.setAttribute('title', 'කේතය පිටපත් කරන්න (Copy Code)');
-            btnFloatingCopy.dataset.action = 'copy';
-        }
-    }
+[data-theme="monokai"] {
+    --bg-main: #272822;
+    --bg-header: #1e1f1c;
+    --text-main: #f8f8f2;
+    --accent-1: #a6e22e;
+    --accent-2: #f92672;
+    --tab-header-bg: #1e1f1c;
+    --btn-bg: #3e3d32;
+    --text-muted: #75715e;
+    --editor-bg: #272822;
+    --dropdown-bg: #3e3d32;
+    --dropdown-hover: #49483e;
+    --modal-bg: rgba(30, 31, 28, 0.82);
+    --glow-color: rgba(166, 226, 46, 0.15);
+    --border-color: rgba(255, 255, 255, 0.08);
 }
 
-// Advanced Error Logging & Tracker Management
-function addErrorLog(type, title, message) {
-    const time = new Date().toLocaleTimeString();
-    if (errorLogs.length > 0 && errorLogs[0].title === title && errorLogs[0].message === message) return;
-    errorLogs.unshift({ type, title, message, time });
-    if (errorLogs.length > 50) errorLogs.pop();
-    updateErrorUI();
+[data-theme="dracula"] {
+    --bg-main: #282a36;
+    --bg-header: #191a21;
+    --text-main: #f8f8f2;
+    --accent-1: #bd93f9;
+    --accent-2: #ff79c6;
+    --tab-header-bg: #21222c;
+    --btn-bg: #44475a;
+    --text-muted: #6272a4;
+    --editor-bg: #282a36;
+    --dropdown-bg: #44475a;
+    --dropdown-hover: #6272a4;
+    --modal-bg: rgba(25, 26, 33, 0.82);
+    --glow-color: rgba(189, 147, 249, 0.2);
+    --border-color: rgba(255, 255, 255, 0.08);
 }
 
-window.addEventListener('error', function(e) {
-    addErrorLog('error', 'App Script Error', `${e.message || 'Unknown Error'} (${e.filename ? e.filename.split('/').pop() : 'App'}:${e.lineno || 0})`);
-});
-
-window.addEventListener('unhandledrejection', function(e) {
-    addErrorLog('error', 'Unhandled Promise Rejection', e.reason ? (e.reason.message || String(e.reason)) : 'Promise Error');
-});
-
-const originalConsoleError = console.error;
-console.error = function(...args) {
-    originalConsoleError.apply(console, args);
-    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-    addErrorLog('error', 'Console Error Log', msg);
-};
-
-function updateErrorUI() {
-    const errCount = errorLogs.filter(e => e.type === 'error').length;
-    if (errorBadge) {
-        errorBadge.innerText = errCount;
-        errorBadge.style.display = errCount > 0 ? 'inline-block' : 'none';
-    }
-
-    if (!errorListContainer) return;
-
-    if (errorLogs.length === 0) {
-        errorListContainer.innerHTML = `
-            <div class="error-item ok">
-                <div class="error-item-header">
-                    <span class="error-item-title">System Status: OK</span>
-                </div>
-                <div class="error-item-msg">දැනට කිසිදු Error හෝ Bug එකක් වාර්තා වී නොමැත. ඇප් එක නිවැරදිව ක්‍රියාත්මක වේ.</div>
-            </div>`;
-        return;
-    }
-
-    errorListContainer.innerHTML = errorLogs.map(err => `
-        <div class="error-item ${err.type}">
-            <div class="error-item-header">
-                <span class="error-item-title">${err.title}</span>
-                <span class="error-item-time">${err.time}</span>
-            </div>
-            <div class="error-item-msg">${err.message}</div>
-        </div>
-    `).join('');
+[data-theme="github"] {
+    --bg-main: #0d1117;
+    --bg-header: #010409;
+    --text-main: #c9d1d9;
+    --accent-1: #58a6ff;
+    --accent-2: #ff7b72;
+    --tab-header-bg: #161b22;
+    --btn-bg: #21262d;
+    --text-muted: #8b949e;
+    --editor-bg: #0d1117;
+    --dropdown-bg: #161b22;
+    --dropdown-hover: #21262d;
+    --modal-bg: rgba(1, 4, 9, 0.82);
+    --glow-color: rgba(88, 166, 255, 0.15);
+    --border-color: rgba(255, 255, 255, 0.08);
 }
 
-btnClearErrors.addEventListener('click', () => {
-    errorLogs = [];
-    updateErrorUI();
-    showToast('Error Log එක ရှင်း කරන ලදී');
-});
-
-if (btnExportErrors) {
-    btnExportErrors.addEventListener('click', () => {
-        if (errorLogs.length === 0) {
-            showToast('Export කිරීමට Logs නොමැත!');
-            return;
-        }
-        const logText = errorLogs.map(e => `[${e.time}] [${e.type.toUpperCase()}] ${e.title}: ${e.message}`).join('\n');
-        executeDownload(logText, 'error_logs_report.txt', 'text/plain');
-        showToast('Error Report එක Download විය');
-    });
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-tap-highlight-color: transparent;
 }
 
-modalBtnErrors.addEventListener('click', () => {
-    settingsModal.classList.remove('show');
-    errorModal.classList.add('show');
-});
-
-closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
-errorModal.addEventListener('click', (e) => {
-    if (e.target === errorModal) errorModal.classList.remove('show');
-});
-
-window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'custom_error_log') {
-        addErrorLog('error', event.data.title || 'JS Runtime Error', event.data.message);
-    }
-});
-
-// Splash Screen Manager
-let splashProgress = 0;
-let splashHidden = false;
-const totalDuration = 1200;
-const intervalTime = 20;
-const increment = 100 / (totalDuration / intervalTime);
-
-const statusMessages = [
-    { pct: 0, text: "System Initializing..." },
-    { pct: 20, text: "Compiler Engine සූදානම් කරමින්..." },
-    { pct: 45, text: "UI Themes & Editors සක්‍රිය කරමින්..." },
-    { pct: 70, text: "Live Sandbox Environment සකසමින්..." },
-    { pct: 90, text: "සියලු පද්ධති සූදානම්..." },
-    { pct: 100, text: "සාදරයෙන් පිළිගනිමු!" }
-];
-
-function hideSplashScreen() {
-    if (splashHidden) return;
-    splashHidden = true;
-    splashScreen.classList.add('hide');
-    setTimeout(() => { splashScreen.style.display = 'none'; }, 350);
+html, body {
+    height: 100%;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    touch-action: manipulation;
 }
 
-const splashInterval = setInterval(() => {
-    splashProgress += increment;
-    if (splashProgress >= 100) {
-        splashProgress = 100;
-        clearInterval(splashInterval);
-        setTimeout(hideSplashScreen, 150);
-    }
-
-    const currentPct = Math.floor(splashProgress);
-    progressFill.style.width = currentPct + '%';
-    splashPercent.innerText = currentPct + '%';
-
-    for (let i = statusMessages.length - 1; i >= 0; i--) {
-        if (currentPct >= statusMessages[i].pct) {
-            splashStatus.innerText = statusMessages[i].text;
-            break;
-        }
-    }
-}, intervalTime);
-
-skipSplashBtn.addEventListener('click', () => {
-    clearInterval(splashInterval);
-    hideSplashScreen();
-});
-
-// Fullscreen Handler
-function toggleFullscreen() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        } else if (document.documentElement.webkitRequestFullscreen) {
-            document.documentElement.webkitRequestFullscreen();
-        }
-        showToast('Full Screen Mode සක්‍රිය විය');
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
-        showToast('Full Screen Mode ඉවත් විය');
-    }
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-// Custom Confirm UI Modal
-const CustomUI = {
-    show: function(type, message, onConfirm) {
-        modalMessage.innerText = message;
-        modalButtons.innerHTML = '';
-        
-        if (type === 'confirm') {
-            modalIcon.className = 'modal-icon confirm';
-            modalIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-            
-            const btnCancel = document.createElement('button');
-            btnCancel.className = 'modal-btn btn-cancel';
-            btnCancel.innerText = 'අවලංගු කරන්න';
-            btnCancel.onclick = () => this.close();
-            
-            const btnYes = document.createElement('button');
-            btnYes.className = 'modal-btn btn-yes';
-            btnYes.innerText = 'ඔව්, මකා දමන්න';
-            btnYes.onclick = () => {
-                if(onConfirm) onConfirm();
-                this.close();
-            };
-            
-            modalButtons.appendChild(btnCancel);
-            modalButtons.appendChild(btnYes);
-            modal.classList.add('show');
-        }
-    },
-    close: function() {
-        modal.classList.remove('show');
-    }
-};
-
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) CustomUI.close();
-});
-
-// Theme Management System
-function applyTheme(theme) {
-    if (theme === 'default') {
-        document.body.removeAttribute('data-theme');
-    } else {
-        document.body.setAttribute('data-theme', theme);
-    }
-    localStorage.setItem('htmlCodesTheme', theme);
-    
-    themeCards.forEach(card => {
-        if (card.getAttribute('data-theme') === theme) {
-            card.classList.add('active');
-        } else {
-            card.classList.remove('active');
-        }
-    });
+svg {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
 }
 
-btnSettings.addEventListener('click', () => settingsModal.classList.add('show'));
-closeSettingsModal.addEventListener('click', () => settingsModal.classList.remove('show'));
-settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) settingsModal.classList.remove('show');
-});
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-header); }
+::-webkit-scrollbar-thumb { background: var(--btn-bg); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-1); }
 
-themeCards.forEach(card => {
-    card.addEventListener('click', () => applyTheme(card.getAttribute('data-theme')));
-});
-
-function applyFontSize(size) {
-    codeAreas.forEach(area => area.style.fontSize = size + 'px');
-    localStorage.setItem('htmlCodesFontSize', size);
-    if (fontSizeSelect) fontSizeSelect.value = size;
+/* Splash Screen */
+.splash-overlay {
+    position: fixed;
+    inset: 0;
+    background: #090a10;
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(137, 180, 250, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(243, 139, 168, 0.1) 0%, transparent 40%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, visibility;
 }
 
-fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
-
-applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
-applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
-
-// High-Performance Line & Character Counter
-let statusUpdatePending = false;
-function updateEditorStatus() {
-    if (statusUpdatePending) return;
-    statusUpdatePending = true;
-    requestAnimationFrame(() => {
-        const activeArea = getActiveTextarea();
-        if (activeArea) {
-            const text = activeArea.value;
-            // High speed line counting using regex
-            const lines = (text.match(/\n/g) || []).length + 1;
-            editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
-            updateFloatingIcon();
-        }
-        statusUpdatePending = false;
-    });
+.splash-overlay.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
-// Smart Tab Indentation Key Handling
-codeAreas.forEach(area => {
-    area.addEventListener('keydown', function(e) {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = this.selectionStart;
-            const end = this.selectionEnd;
-
-            if (e.shiftKey) {
-                if (start === end) {
-                    const lineStart = this.value.lastIndexOf('\n', start - 1) + 1;
-                    if (this.value.substring(lineStart, lineStart + 2) === '  ') {
-                        this.value = this.value.substring(0, lineStart) + this.value.substring(lineStart + 2);
-                        this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 2);
-                    }
-                } else {
-                    const selectedText = this.value.substring(start, end);
-                    const lines = selectedText.split('\n');
-                    const unindentedLines = lines.map(line => line.startsWith('  ') ? line.substring(2) : (line.startsWith(' ') ? line.substring(1) : line));
-                    const unindentedText = unindentedLines.join('\n');
-                    this.value = this.value.substring(0, start) + unindentedText + this.value.substring(end);
-                    this.selectionStart = start;
-                    this.selectionEnd = start + unindentedText.length;
-                }
-            } else {
-                if (start === end) {
-                    this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
-                    this.selectionStart = this.selectionEnd = start + 2;
-                } else {
-                    const selectedText = this.value.substring(start, end);
-                    const lines = selectedText.split('\n');
-                    const indentedText = lines.map(line => '  ' + line).join('\n');
-                    this.value = this.value.substring(0, start) + indentedText + this.value.substring(end);
-                    this.selectionStart = start;
-                    this.selectionEnd = start + indentedText.length;
-                }
-            }
-            updateEditorStatus();
-        }
-    }, { passive: false });
-});
-
-// Storage Management
-function saveCodeToStorage() {
-    try {
-        localStorage.setItem('savedHTML', htmlCode.value);
-        localStorage.setItem('savedCSS', cssCode.value);
-        localStorage.setItem('savedJS', jsCode.value);
-    } catch(err) {
-        addErrorLog('error', 'Storage Full', 'LocalStorage memory limit exceeded');
-    }
+.splash-card {
+    background: rgba(17, 17, 27, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 30px 20px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90dvh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--glow-color);
+    position: relative;
+    animation: splashEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
 }
 
-// Live Output Preview Renderer
-function renderPreview() {
-    const html = htmlCode.value;
-    const css = cssCode.value;
-    const js = jsCode.value;
-    
-    const safeJS = js.replace(/<\/script>/gi, '<\\/script>');
-    const safeCSS = css.replace(/<\/style>/gi, '<\\/style>');
-
-    const bridgeScript = `
-        <script>
-            window.onerror = function(msg, url, line, col, err) {
-                window.parent.postMessage({ 
-                    type: 'custom_error_log', 
-                    title: 'Live Preview JS Error', 
-                    message: msg + ' (Line ' + line + (col ? (', Col ' + col) : '') + ')' 
-                }, '*');
-                return true;
-            };
-            window.addEventListener('unhandledrejection', function(event) {
-                window.parent.postMessage({ 
-                    type: 'custom_error_log', 
-                    title: 'Live Preview Promise Error', 
-                    message: event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection' 
-                }, '*');
-            });
-        <\/script>
-    `;
-
-    const fullDoc = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>${safeCSS}</style>
-            ${bridgeScript}
-        </head>
-        <body>
-            ${html}
-            <script>
-                try {
-                    ${safeJS}
-                } catch(err) {
-                    window.parent.postMessage({ 
-                        type: 'custom_error_log', 
-                        title: 'Live Preview Execution Error', 
-                        message: err.message 
-                    }, '*');
-                }
-            <\/script>
-        </body>
-        </html>
-    `;
-    
-    liveOutput.srcdoc = fullDoc;
+@keyframes splashEntrance {
+    from { opacity: 0; transform: scale(0.96) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-// Seamless Background Refresh
-function getContentHash() {
-    return htmlCode.value + '||' + cssCode.value + '||' + jsCode.value;
+.splash-badge {
+    display: inline-block;
+    background: rgba(137, 180, 250, 0.12);
+    color: #89b4fa;
+    border: 1px solid rgba(137, 180, 250, 0.25);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
 }
 
-function syncAndRefresh(force = false) {
-    const currentHash = getContentHash();
-    if (force || currentHash !== lastRenderedHash) {
-        if (syncDot) syncDot.classList.add('syncing');
-        saveCodeToStorage();
-        renderPreview();
-        lastRenderedHash = currentHash;
-        setTimeout(() => {
-            if (syncDot) syncDot.classList.remove('syncing');
-        }, 400);
-    }
+.splash-title {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+.splash-title span { color: #89b4fa; }
+
+.splash-description {
+    font-size: 12.5px;
+    color: #a6adc8;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    font-weight: 400;
 }
 
-// Performance Fix: Smart Debounce Auto-Sync avoids Lag when typing
-let autoSyncTimer;
-[htmlCode, cssCode, jsCode].forEach(textarea => {
-    textarea.addEventListener('input', () => {
-        updateEditorStatus();
-        clearTimeout(autoSyncTimer);
-        // Wait 1.2s after user stops typing to compile and save, resolving all lags
-        autoSyncTimer = setTimeout(() => {
-            syncAndRefresh(false);
-        }, 1200);
-    }, { passive: true });
-});
-
-// View Switcher Handlers
-btnCode.addEventListener('click', () => {
-    btnCode.classList.add('active'); 
-    btnPreview.classList.remove('active');
-    mainArea.classList.remove('show-preview');
-});
-
-btnPreview.addEventListener('click', () => {
-    btnPreview.classList.add('active'); 
-    btnCode.classList.remove('active');
-    mainArea.classList.add('show-preview');
-    syncAndRefresh(true); 
-});
-
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        tabBtns.forEach(t => t.classList.remove('active'));
-        codeAreas.forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
-        updateEditorStatus();
-    });
-});
-
-// File Processor for Open File Feature
-function processOpenedFile(name, content, handle = null) {
-    const ext = name.split('.').pop().toLowerCase();
-    let targetType = 'html';
-    
-    if (ext === 'css') targetType = 'css';
-    else if (ext === 'js') targetType = 'js';
-    else targetType = 'html';
-
-    const targetTabBtn = document.querySelector(`.tab-btn[data-target="${targetType}-code"]`);
-    if (targetTabBtn) targetTabBtn.click();
-
-    if (targetType === 'html') htmlCode.value = content;
-    else if (targetType === 'css') cssCode.value = content;
-    else if (targetType === 'js') jsCode.value = content;
-
-    fileHandles[targetType] = handle;
-    virtualFiles[targetType].name = name;
-
-    syncAndRefresh(true);
-    updateEditorStatus();
-    showToast(`"${name}" විවෘත විය!`);
+.splash-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 22px;
+}
+.feature-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cdd6f4;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-async function openFile() {
-    if ('showOpenFilePicker' in window) {
-        try {
-            const handles = await window.showOpenFilePicker({
-                types: [{
-                    description: 'Web Files (.html, .css, .js)',
-                    accept: {
-                        'text/html': ['.html', '.htm'],
-                        'text/css': ['.css'],
-                        'text/javascript': ['.js'],
-                        'text/plain': ['.txt']
-                    }
-                }],
-                multiple: true
-            });
-            for (const handle of handles) {
-                const file = await handle.getFile();
-                const content = await file.text();
-                processOpenedFile(file.name, content, handle);
-            }
-        } catch (err) {
-            if (err.name !== 'AbortError') fileInput.click();
-        }
-    } else {
-        fileInput.click();
-    }
+.loader-box { margin-bottom: 20px; }
+.loader-status-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #a6adc8;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+.progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #89b4fa, #f38ba8);
+    border-radius: 10px;
+    transition: width 0.06s linear;
+    box-shadow: 0 0 10px rgba(137, 180, 250, 0.7);
+    will-change: width;
 }
 
-btnOpenFile.addEventListener('click', openFile);
-
-fileInput.addEventListener('change', (e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
-        reader.readAsText(file);
-    });
-    fileInput.value = '';
-});
-
-// Save Active File Feature
-async function saveActiveFile() {
-    const type = getActiveType();
-    const activeArea = document.getElementById(`${type}-code`);
-    const content = activeArea ? activeArea.value : '';
-    const currentHandle = fileHandles[type];
-    const defaultName = virtualFiles[type].name;
-    const mimeType = virtualFiles[type].mime;
-
-    saveCodeToStorage();
-
-    if (currentHandle && 'createWritable' in currentHandle) {
-        try {
-            let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
-            if (perm !== 'granted') perm = await currentHandle.requestPermission({ mode: 'readwrite' });
-            if (perm === 'granted') {
-                const writable = await currentHandle.createWritable();
-                await writable.write(content);
-                await writable.close();
-                showToast(`"${virtualFiles[type].name}" ගොනුවට සාර්ථකව Save විය!`);
-                return;
-            }
-        } catch (err) {
-            addErrorLog('info', 'Save Fallback', 'Standard file save used');
-        }
-    }
-
-    executeDownload(content, defaultName, mimeType);
+.skip-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cdd6f4;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.skip-btn:hover, .skip-btn:active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: #89b4fa;
 }
 
-btnSaveFile.addEventListener('click', saveActiveFile);
+.splash-footer {
+    font-size: 11px;
+    color: #6c7086;
+    letter-spacing: 0.5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 12px;
+    white-space: nowrap;
+}
+.splash-footer span { color: #89b4fa; font-weight: 600; }
 
-// Copy Active Code Helper
-function copyActiveCode() {
-    const activeArea = getActiveTextarea();
-    if (activeArea && activeArea.value.trim() !== '') {
-        navigator.clipboard.writeText(activeArea.value).then(() => {
-            showToast('කේතය සාර්ථකව Copy විය!');
-        }).catch(() => {
-            activeArea.select();
-            document.execCommand('copy');
-            showToast('කේතය Copy විය!');
-        });
-    } else {
-        showToast('Copy කිරීමට කේතයක් නොමැත!');
-    }
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: var(--bg-header);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+    flex-shrink: 0;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-// Floating Copy/Paste Button (Popup FAB at Bottom Left)
-btnFloatingCopy.addEventListener('click', async () => {
-    const action = btnFloatingCopy.dataset.action || 'copy';
-    const activeArea = getActiveTextarea();
-    if (!activeArea) return;
+.logo { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.logo span { color: var(--accent-1); }
 
-    if (action === 'paste') {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
-                activeArea.value = text;
-                updateEditorStatus();
-                syncAndRefresh(true);
-                showToast('කේතය සාර්ථකව Paste විය!');
-            } else {
-                showToast('Clipboard එක හිස්ව ඇත!');
-            }
-        } catch (err) {
-            showToast('කරුණාකර Paste කිරීමට Long Press/Ctrl+V භාවිත කරන්න');
-        }
-    } else {
-        copyActiveCode();
-    }
-});
-
-// Floating Delete Button (Popup FAB at Bottom Right)
-btnFloatingDelete.addEventListener('click', () => {
-    const activeArea = getActiveTextarea();
-    const type = getActiveType();
-    if (activeArea) {
-        CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
-            activeArea.value = '';
-            syncAndRefresh(true);
-            updateEditorStatus();
-            showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
-        });
-    }
-});
-
-// Download Options Handlers
-modalBtnDownload.addEventListener('click', () => {
-    settingsModal.classList.remove('show');
-    downloadModal.classList.add('show');
-});
-
-modalBtnFullscreen.addEventListener('click', () => {
-    toggleFullscreen();
-    settingsModal.classList.remove('show');
-});
-
-closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
-downloadModal.addEventListener('click', (e) => {
-    if (e.target === downloadModal) downloadModal.classList.remove('show');
-});
-
-function executeDownload(content, fileName, mimeType) {
-    try {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url; 
-        a.download = fileName;
-        document.body.appendChild(a); 
-        a.click(); 
-        
-        // Timeout prevents crash before Mobile OS handles download
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 2000);
-    } catch(err) {
-        addErrorLog('error', 'Download Error', err.message);
-    }
+.view-switcher {
+    display: flex;
+    background-color: var(--btn-bg);
+    border-radius: 30px;
+    padding: 3px;
+    gap: 2px;
+}
+.view-switcher button {
+    background: transparent; border: none; color: var(--text-muted);
+    padding: 5px 12px; border-radius: 25px; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: var(--transition-smooth); font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.view-switcher button.active {
+    background-color: var(--accent-1); color: var(--bg-header);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); font-weight: 600;
 }
 
-// Download All Active Files (Crash Fix Applied)
-document.getElementById('dl-all').addEventListener('click', () => {
-    let downloadedCount = 0;
-    let delay = 0; // Stagger downloads to prevent browser crash
-    
-    if (htmlCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), delay);
-        downloadedCount++;
-        delay += 1000; // 1s wait between downloads
-    }
-    if (cssCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), delay);
-        downloadedCount++;
-        delay += 1000;
-    }
-    if (jsCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), delay);
-        downloadedCount++;
-    }
-
-    downloadModal.classList.remove('show');
-    if (downloadedCount > 0) {
-        showToast(`Files ${downloadedCount} ම Download වෙමින් පවතී...`);
-    } else {
-        showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
-    }
-});
-
-document.getElementById('dl-bundle').addEventListener('click', () => {
-    const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
-    const bundledContent = `<!DOCTYPE html>
-<html lang="si">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Web Project</title>
-    <style>
-${cssCode.value}
-    </style>
-</head>
-<body>
-${htmlCode.value}
-    <script>
-${safeJsForExport}
-    <\/script>
-</body>
-</html>`;
-    executeDownload(bundledContent, 'index.html', 'text/html');
-    downloadModal.classList.remove('show');
-    showToast('index.html Download වන ලදී!');
-});
-
-document.getElementById('dl-html').addEventListener('click', () => {
-    executeDownload(htmlCode.value, 'index.html', 'text/html');
-    downloadModal.classList.remove('show');
-    showToast('index.html Download වන ලදී!');
-});
-
-document.getElementById('dl-css').addEventListener('click', () => {
-    executeDownload(cssCode.value, 'style.css', 'text/css');
-    downloadModal.classList.remove('show');
-    showToast('style.css Download වන ලදී!');
-});
-
-document.getElementById('dl-js').addEventListener('click', () => {
-    executeDownload(jsCode.value, 'script.js', 'text/javascript');
-    downloadModal.classList.remove('show');
-    showToast('script.js Download වන ලදී!');
-});
-
-// Keyboard Shortcuts
-document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        saveActiveFile();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        if (mainArea.classList.contains('show-preview')) btnCode.click();
-        else btnPreview.click();
-    }
-});
-
-// App Initialization
-window.addEventListener('DOMContentLoaded', () => {
-    const defaultHTML = `<div class="card">
-  <h1>ආයුබෝවන්! 🇱🇰</h1>
-  <p>ඔබගේ HTML.codes Live Editor එක සාර්ථකව වැඩ කරයි.</p>
-  <button onclick="sayHello()">Click Me</button>
-</div>`;
-
-    const defaultCSS = `body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #0f172a;
-  color: #f8fafc;
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 15px;
-  box-sizing: border-box;
+main { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    position: relative; 
+    overflow: hidden; 
+    height: 100%;
 }
-.card {
-  background: #1e293b;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-  text-align: center;
-  border: 1px solid rgba(255,255,255,0.1);
-  max-width: 400px;
-  width: 100%;
+
+#editor-container, #preview-container {
+    contain: layout style size;
 }
-h1 { color: #f38ba8; margin-bottom: 10px; font-size: 24px; }
-p { color: #94a3b8; font-size: 14px; }
-button {
-  background: #89b4fa;
-  color: #11111b;
-  border: none;
-  padding: 12px 24px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: 0.3s;
+
+#editor-container {
+    display: flex; flex-direction: column; height: 100%; width: 100%;
+    position: absolute; top: 0; left: 0; 
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
 }
-button:hover { 
-  background: #74a1f0; 
-  transform: translateY(-2px);
-}`;
 
-    const defaultJS = `function sayHello() {
-  alert('සාර්ථකයි! ඔබගේ JavaScript එක හරියටම වැඩ කරනවා 🎉');
-}`;
+.tab-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background-color: var(--tab-header-bg); padding: 0 8px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-color);
+}
+.code-tabs { display: flex; flex-shrink: 0; gap: 2px; }
+.tab-btn {
+    background: transparent; border: none; color: var(--text-muted);
+    padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border-bottom: 3px solid transparent; transition: var(--transition-smooth);
+    font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.tab-btn.active { color: var(--text-main); border-bottom-color: var(--accent-2); }
+.tab-btn:hover { color: var(--accent-1); }
 
-    htmlCode.value = localStorage.getItem('savedHTML') !== null ? localStorage.getItem('savedHTML') : defaultHTML;
-    cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
-    jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
+.action-btns { display: flex; gap: 4px; padding-right: 5px; align-items: center; flex-shrink: 0; }
+.icon-btn {
+    background: transparent; border: none; cursor: pointer; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth);
+    padding: 7px; border-radius: 6px;
+}
+.icon-btn:hover, .icon-btn:active { color: var(--accent-1); background: var(--btn-bg); }
+.icon-btn:hover#btn-save-file { color: #a6e22e; }
+.icon-btn:hover#btn-open-file { color: #89b4fa; }
 
-    syncAndRefresh(true);
-    updateEditorStatus();
-    updateErrorUI();
-});
+.editor-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background-color: var(--editor-bg);
+}
+
+.code-area {
+    flex: 1; width: 100%; height: 100%; background-color: var(--editor-bg); color: var(--text-main);
+    font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; padding: 14px;
+    padding-bottom: 75px !important;
+    border: none; outline: none; resize: none; display: none; line-height: 1.5;
+    tab-size: 2; -moz-tab-size: 2; white-space: pre;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
+    contain: strict;
+    will-change: transform, scroll-position;
+    overscroll-behavior: contain;
+}
+.code-area.active { display: block; animation: fadeInArea 0.15s ease-out; }
+@keyframes fadeInArea {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+}
+
+/* Floating Action Buttons (Copy - Left, Delete - Right) */
+.floating-copy-btn {
+    position: absolute;
+    bottom: 25px;
+    left: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(137, 180, 250, 0.95);
+    color: #11111b;
+    border: none;
+    box-shadow: 0 8px 20px rgba(137, 180, 250, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 50;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+
+.floating-copy-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: #89b4fa;
+    box-shadow: 0 12px 25px rgba(137, 180, 250, 0.6);
+}
+
+.floating-copy-btn:active {
+    transform: scale(0.95);
+}
+
+.floating-delete-btn {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(243, 139, 168, 0.95);
+    color: #11111b;
+    border: none;
+    box-shadow: 0 8px 20px rgba(243, 139, 168, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 50;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+
+.floating-delete-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: #f38ba8;
+    box-shadow: 0 12px 25px rgba(243, 139, 168, 0.6);
+}
+
+.floating-delete-btn:active {
+    transform: scale(0.95);
+}
+
+#html-code { color: var(--text-main); }
+#css-code { color: var(--accent-1); }
+#js-code { color: #f9e2af; } 
+[data-theme="light"] #js-code { color: #d97706; }
+[data-theme="monokai"] #js-code { color: #e6db74; }
+[data-theme="github"] #js-code { color: #f2cc60; }
+
+#preview-container {
+    height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+    background-color: #ffffff; opacity: 0; pointer-events: none; 
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+}
+#preview-container iframe { width: 100%; height: 100%; border: none; background-color: #ffffff; }
+
+main.show-preview #editor-container { opacity: 0; pointer-events: none; transform: scale(0.99); }
+main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
+
+.footer-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 12px; font-size: 11px;
+    background-color: var(--bg-header); color: var(--text-muted);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15); z-index: 10; letter-spacing: 0.5px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-color);
+    gap: 10px;
+}
+.footer-banner .author-tag {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.footer-banner span { color: var(--accent-1); font-weight: 600; }
+
+/* Sync Indicator Status */
+.sync-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #a6e22e;
+    box-shadow: 0 0 6px #a6e22e;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.sync-dot.syncing {
+    background-color: #89b4fa;
+    transform: scale(1.3);
+    box-shadow: 0 0 8px #89b4fa;
+}
+
+.editor-status { font-family: 'Fira Code', monospace; font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+
+/* Modals */
+.modal-overlay {
+    position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+    opacity: 0; visibility: hidden; transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1); padding: 15px;
+    will-change: opacity, visibility;
+}
+.modal-overlay.show { opacity: 1; visibility: visible; }
+
+.modal-box {
+    background: var(--bg-header); padding: 22px 20px; border-radius: 18px; width: 100%; max-width: 400px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 35px var(--glow-color); 
+    transform: scale(0.92) translateY(15px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    text-align: center; border: 1px solid var(--border-color);
+    position: relative;
+    will-change: transform;
+}
+.modal-overlay.show .modal-box { transform: scale(1) translateY(0); }
+
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
+}
+.modal-title { font-size: 15px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.modal-close-btn {
+    background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+    padding: 4px; border-radius: 6px; transition: var(--transition-smooth);
+}
+.modal-close-btn:hover { color: var(--accent-2); background: var(--btn-bg); }
+
+.modal-icon {
+    width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px; font-size: 22px;
+}
+.modal-icon.alert { background: rgba(137, 180, 250, 0.1); color: var(--accent-1); }
+.modal-icon.confirm { background: rgba(243, 139, 168, 0.1); color: var(--accent-2); }
+
+.modal-message { font-size: 13.5px; margin-bottom: 18px; color: var(--text-main); line-height: 1.4; word-break: break-word; }
+
+.modal-buttons { display: flex; gap: 8px; justify-content: center; }
+.modal-btn {
+    padding: 9px 18px; border: none; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; transition: var(--transition-smooth); font-family: 'Poppins', sans-serif;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-cancel { background: var(--btn-bg); color: var(--text-main); }
+.btn-cancel:hover { background: var(--dropdown-hover); }
+.btn-ok, .btn-yes { background: var(--accent-1); color: var(--bg-header); }
+.btn-yes { background: var(--accent-2); color: #ffffff; }
+.btn-ok:hover, .btn-yes:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.setting-group { margin-bottom: 16px; text-align: left; }
+.setting-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
+
+.settings-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.settings-tool-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 10px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    transition: var(--transition-smooth);
+}
+
+.settings-tool-btn:hover {
+    background: var(--dropdown-hover);
+    border-color: var(--accent-1);
+    color: var(--accent-1);
+}
+
+.error-btn-accent:hover {
+    border-color: var(--accent-2) !important;
+    color: var(--accent-2) !important;
+}
+
+.error-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent-2);
+    color: #11111b;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    line-height: 1;
+}
+
+.theme-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
+.theme-card {
+    background: var(--btn-bg); border: 1px solid var(--border-color); padding: 10px 14px;
+    border-radius: 10px; font-size: 12.5px; cursor: pointer; transition: var(--transition-smooth);
+    display: flex; align-items: center; justify-content: space-between; color: var(--text-main);
+}
+.theme-card:hover { border-color: var(--accent-1); background: var(--dropdown-hover); }
+.theme-card.active { border-color: var(--accent-1); background: rgba(137, 180, 250, 0.12); font-weight: 600; color: var(--accent-1); }
+
+.select-input {
+    width: 100%; background: var(--btn-bg); border: 1px solid var(--border-color); color: var(--text-main);
+    padding: 9px 12px; border-radius: 10px; font-size: 13px; font-family: 'Poppins', sans-serif; outline: none;
+    transition: var(--transition-smooth);
+}
+.select-input:focus { border-color: var(--accent-1); }
+
+.download-options { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.download-card {
+    background: var(--btn-bg); border: 1px solid var(--border-color); padding: 12px 14px;
+    border-radius: 12px; cursor: pointer; transition: var(--transition-smooth); display: flex;
+    align-items: center; gap: 12px; color: var(--text-main);
+}
+.download-card:hover { border-color: var(--accent-1); background: var(--dropdown-hover); transform: translateY(-1px); }
+.download-card.highlight { border-color: rgba(166, 226, 46, 0.4); background: rgba(166, 226, 46, 0.05); }
+.download-card.highlight:hover { border-color: #a6e22e; background: rgba(166, 226, 46, 0.12); }
+.download-card-icon {
+    width: 36px; height: 36px; border-radius: 8px; background: rgba(137, 180, 250, 0.12);
+    display: flex; align-items: center; justify-content: center; color: var(--accent-1); flex-shrink: 0;
+}
+.download-card-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.download-card-desc { font-size: 11px; color: var(--text-muted); }
+
+/* Error Details Modal Content */
+.error-modal-box { max-width: 480px; text-align: left; }
+.error-modal-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.error-list-container {
+    max-height: 250px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding-right: 4px;
+}
+.error-item {
+    background: var(--btn-bg);
+    border-left: 3px solid var(--accent-2);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+.error-item.info { border-left-color: var(--accent-1); }
+.error-item.ok { border-left-color: #a6e22e; }
+.error-item-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+.error-item-title { color: var(--accent-2); }
+.error-item.info .error-item-title { color: var(--accent-1); }
+.error-item.ok .error-item-title { color: #a6e22e; }
+.error-item-time { color: var(--text-muted); font-size: 10px; }
+.error-item-msg { font-family: 'Fira Code', monospace; color: var(--text-main); word-break: break-all; font-size: 11px; }
+
+.error-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.toast-notification {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--bg-header); color: var(--text-main); padding: 9px 18px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; border: 1px solid var(--accent-1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.35); opacity: 0; pointer-events: none; 
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25), opacity 0.25s ease;
+    z-index: 10000; display: flex; align-items: center; gap: 8px;
+    will-change: transform, opacity;
+}
+.toast-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 480px) {
+    header { padding: 6px 10px; }
+    .logo { font-size: 15px; }
+    .view-switcher button { padding: 4px 10px; font-size: 11px; }
+    .tab-btn { padding: 8px 10px; font-size: 11px; }
+    .action-btns { gap: 2px; }
+    .icon-btn { padding: 6px; }
+    .code-area { font-size: 13px; padding: 10px; }
+    .footer-banner { font-size: 10px; padding: 4px 8px; }
+    .sync-indicator { display: none; }
+    .floating-copy-btn { width: 42px; height: 42px; bottom: 20px; left: 20px; }
+    .floating-delete-btn { width: 42px; height: 42px; bottom: 20px; right: 20px; }
+}
