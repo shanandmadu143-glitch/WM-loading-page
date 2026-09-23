@@ -139,6 +139,10 @@
     <!-- App Footer Banner -->
     <footer class="footer-banner">
         <div class="author-tag">Created by <span>Yomal Lakshan</span></div>
+        <div class="sync-indicator" id="sync-indicator" title="Background Auto Sync Active">
+            <span class="sync-dot"></span>
+            <span id="sync-text">Auto-Sync 4s</span>
+        </div>
         <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
     </footer>
 
@@ -226,13 +230,14 @@
                 </button>
             </div>
             
-            <p class="error-modal-desc">Web app එකෙහි සහ ඇතුළත් කළ කේතයන්හි හඳුනාගත් බෝද හෝ Errors සටහන පහතින් දැක්වේ:</p>
+            <p class="error-modal-desc">Web app එකෙහි සහ ඇතුළත් කළ කේතයන්හි හඳුනාගත් දෝෂ සහ User Experience විස්තර පහතින් දැක්වේ:</p>
             
             <div id="error-list-container" class="error-list-container">
                 <!-- Dynamically Populated Errors -->
             </div>
 
             <div class="error-modal-actions">
+                <button id="btn-export-errors" class="modal-btn btn-ok">Export Report</button>
                 <button id="btn-clear-errors" class="modal-btn btn-cancel">Clear Log</button>
             </div>
         </div>
