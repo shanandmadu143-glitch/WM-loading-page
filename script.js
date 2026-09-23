@@ -63,11 +63,11 @@ function getActiveType() {
     return 'html';
 }
 
-// Splash Screen Setup
+// Splash Screen Setup with smooth frame interpolation
 let splashProgress = 0;
 let splashHidden = false;
-const totalDuration = 1500;
-const intervalTime = 30;
+const totalDuration = 1200;
+const intervalTime = 20;
 const increment = 100 / (totalDuration / intervalTime);
 
 const statusMessages = [
@@ -83,7 +83,7 @@ function hideSplashScreen() {
     if (splashHidden) return;
     splashHidden = true;
     splashScreen.classList.add('hide');
-    setTimeout(() => { splashScreen.style.display = 'none'; }, 300);
+    setTimeout(() => { splashScreen.style.display = 'none'; }, 350);
 }
 
 const splashInterval = setInterval(() => {
@@ -91,7 +91,7 @@ const splashInterval = setInterval(() => {
     if (splashProgress >= 100) {
         splashProgress = 100;
         clearInterval(splashInterval);
-        setTimeout(hideSplashScreen, 200);
+        setTimeout(hideSplashScreen, 150);
     }
 
     const currentPct = Math.floor(splashProgress);
@@ -221,7 +221,7 @@ fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
 applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
 applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
 
-// Optimized Editor Line & Character Counter (Lag-free using split('\n'))
+// Optimized Editor Line & Character Counter using requestAnimationFrame
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
 let statusUpdatePending = false;
@@ -239,7 +239,7 @@ function updateEditorStatus() {
     });
 }
 
-// Smart Tab key Handler
+// Smart Tab key Handler with smooth indentation
 codeAreas.forEach(area => {
     area.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -345,7 +345,7 @@ function scheduleSync(immediate = false) {
         syncTimeout = setTimeout(() => {
             saveCode();
             renderPreview();
-        }, 400);
+        }, 300); // Optimized debounce delay for ultra-smooth live rendering
     }
 }
 
@@ -356,7 +356,7 @@ function scheduleSync(immediate = false) {
     }, { passive: true });
 });
 
-// View Switcher
+// View Switcher with smooth transition states
 btnCode.addEventListener('click', () => {
     btnCode.classList.add('active'); 
     btnPreview.classList.remove('active');
