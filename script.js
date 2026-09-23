@@ -29,10 +29,6 @@ const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
 const syncDot = document.querySelector('.sync-dot');
 
-// Icons for Copy and Paste states
-const copyIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-const pasteIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
-
 // Settings & Error Modal Action Elements
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
@@ -90,19 +86,19 @@ function getActiveType() {
 
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
-// Update Floating Icon to Copy or Paste based on empty text
+// Dynamic Copy/Paste Icon Update Logic
 function updateFloatingIcon() {
     const activeArea = getActiveTextarea();
-    if (activeArea) {
-        if (activeArea.value.trim() === '') {
-            btnFloatingCopy.innerHTML = pasteIconSVG;
-            btnFloatingCopy.setAttribute('title', 'කේතය Paste කරන්න (Paste Code)');
-            btnFloatingCopy.dataset.action = 'paste';
-        } else {
-            btnFloatingCopy.innerHTML = copyIconSVG;
-            btnFloatingCopy.setAttribute('title', 'කේතය පිටපත් කරන්න (Copy Code)');
-            btnFloatingCopy.dataset.action = 'copy';
-        }
+    if (activeArea && activeArea.value.trim() === '') {
+        // Change to Paste Icon
+        btnFloatingCopy.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>';
+        btnFloatingCopy.title = "කේතය Paste කරන්න (Paste)";
+        btnFloatingCopy.setAttribute('data-action', 'paste');
+    } else {
+        // Change to Copy Icon
+        btnFloatingCopy.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        btnFloatingCopy.title = "කේතය පිටපත් කරන්න (Copy)";
+        btnFloatingCopy.setAttribute('data-action', 'copy');
     }
 }
 
@@ -110,6 +106,7 @@ function updateFloatingIcon() {
 function addErrorLog(type, title, message) {
     const time = new Date().toLocaleTimeString();
     if (errorLogs.length > 0 && errorLogs[0].title === title && errorLogs[0].message === message) return;
+    
     errorLogs.unshift({ type, title, message, time });
     if (errorLogs.length > 50) errorLogs.pop();
     updateErrorUI();
@@ -324,7 +321,9 @@ settingsModal.addEventListener('click', (e) => {
 });
 
 themeCards.forEach(card => {
-    card.addEventListener('click', () => applyTheme(card.getAttribute('data-theme')));
+    card.addEventListener('click', () => {
+        applyTheme(card.getAttribute('data-theme'));
+    });
 });
 
 function applyFontSize(size) {
@@ -347,16 +346,13 @@ function updateEditorStatus() {
         const activeArea = getActiveTextarea();
         if (activeArea) {
             const text = activeArea.value;
-            // High speed line counting using regex
-            const lines = (text.match(/\n/g) || []).length + 1;
+            const lines = text ? text.split('\n').length : 1;
             editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
-            updateFloatingIcon();
         }
         statusUpdatePending = false;
     });
 }
 
-// Smart Tab Indentation Key Handling
 codeAreas.forEach(area => {
     area.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -394,11 +390,15 @@ codeAreas.forEach(area => {
                 }
             }
             updateEditorStatus();
+            updateFloatingIcon();
+            
+            // Trigger background sync after tab
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => { syncAndRefresh(false); }, 1000);
         }
     }, { passive: false });
 });
 
-// Storage Management
 function saveCodeToStorage() {
     try {
         localStorage.setItem('savedHTML', htmlCode.value);
@@ -409,7 +409,6 @@ function saveCodeToStorage() {
     }
 }
 
-// Live Output Preview Renderer
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
@@ -467,7 +466,6 @@ function renderPreview() {
     liveOutput.srcdoc = fullDoc;
 }
 
-// Seamless Background Refresh
 function getContentHash() {
     return htmlCode.value + '||' + cssCode.value + '||' + jsCode.value;
 }
@@ -485,16 +483,17 @@ function syncAndRefresh(force = false) {
     }
 }
 
-// Performance Fix: Smart Debounce Auto-Sync avoids Lag when typing
-let autoSyncTimer;
+// Performance Optimized: Debounce mechanism instead of continuous setInterval (Fixes Lag)
+let syncTimeout;
 [htmlCode, cssCode, jsCode].forEach(textarea => {
     textarea.addEventListener('input', () => {
         updateEditorStatus();
-        clearTimeout(autoSyncTimer);
-        // Wait 1.2s after user stops typing to compile and save, resolving all lags
-        autoSyncTimer = setTimeout(() => {
+        updateFloatingIcon();
+        
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => {
             syncAndRefresh(false);
-        }, 1200);
+        }, 1000); // Trigger saving and syncing 1 second after user STOPS typing
     }, { passive: true });
 });
 
@@ -519,6 +518,7 @@ tabBtns.forEach(btn => {
         btn.classList.add('active');
         document.getElementById(btn.dataset.target).classList.add('active');
         updateEditorStatus();
+        updateFloatingIcon(); // update Copy/Paste Icon on Tab switch
     });
 });
 
@@ -543,6 +543,7 @@ function processOpenedFile(name, content, handle = null) {
 
     syncAndRefresh(true);
     updateEditorStatus();
+    updateFloatingIcon();
     showToast(`"${name}" විවෘත විය!`);
 }
 
@@ -619,7 +620,6 @@ async function saveActiveFile() {
 
 btnSaveFile.addEventListener('click', saveActiveFile);
 
-// Copy Active Code Helper
 function copyActiveCode() {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value.trim() !== '') {
@@ -630,37 +630,30 @@ function copyActiveCode() {
             document.execCommand('copy');
             showToast('කේතය Copy විය!');
         });
-    } else {
-        showToast('Copy කිරීමට කේතයක් නොමැත!');
     }
 }
 
-// Floating Copy/Paste Button (Popup FAB at Bottom Left)
+// Floating Copy / Paste Button Action Handler
 btnFloatingCopy.addEventListener('click', async () => {
-    const action = btnFloatingCopy.dataset.action || 'copy';
-    const activeArea = getActiveTextarea();
-    if (!activeArea) return;
-
-    if (action === 'paste') {
+    if (btnFloatingCopy.getAttribute('data-action') === 'paste') {
         try {
             const text = await navigator.clipboard.readText();
-            if (text) {
+            const activeArea = getActiveTextarea();
+            if (activeArea) {
                 activeArea.value = text;
+                updateFloatingIcon();
                 updateEditorStatus();
                 syncAndRefresh(true);
-                showToast('කේතය සාර්ථකව Paste විය!');
-            } else {
-                showToast('Clipboard එක හිස්ව ඇත!');
+                showToast('කේතය Paste කරන ලදී!');
             }
         } catch (err) {
-            showToast('කරුණාකර Paste කිරීමට Long Press/Ctrl+V භාවිත කරන්න');
+            showToast('Paste කිරීමට නොහැක! Clipboard access ලබා දෙන්න.');
         }
     } else {
         copyActiveCode();
     }
 });
 
-// Floating Delete Button (Popup FAB at Bottom Right)
 btnFloatingDelete.addEventListener('click', () => {
     const activeArea = getActiveTextarea();
     const type = getActiveType();
@@ -669,6 +662,7 @@ btnFloatingDelete.addEventListener('click', () => {
             activeArea.value = '';
             syncAndRefresh(true);
             updateEditorStatus();
+            updateFloatingIcon(); // Reset to Paste icon
             showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
         });
     }
@@ -691,49 +685,40 @@ downloadModal.addEventListener('click', (e) => {
 });
 
 function executeDownload(content, fileName, mimeType) {
-    try {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url; 
-        a.download = fileName;
-        document.body.appendChild(a); 
-        a.click(); 
-        
-        // Timeout prevents crash before Mobile OS handles download
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 2000);
-    } catch(err) {
-        addErrorLog('error', 'Download Error', err.message);
-    }
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; 
+    a.download = fileName;
+    document.body.appendChild(a); 
+    a.click(); 
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000); // Increased timeout to prevent crash
 }
 
-// Download All Active Files (Crash Fix Applied)
+// Download All Active Files (Crash fix - Added safe delays between downloads)
 document.getElementById('dl-all').addEventListener('click', () => {
     let downloadedCount = 0;
-    let delay = 0; // Stagger downloads to prevent browser crash
+    let baseDelay = 100;
     
     if (htmlCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), delay);
+        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), baseDelay);
+        baseDelay += 800;
         downloadedCount++;
-        delay += 1000; // 1s wait between downloads
     }
     if (cssCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), delay);
+        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), baseDelay);
+        baseDelay += 800;
         downloadedCount++;
-        delay += 1000;
     }
     if (jsCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), delay);
+        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), baseDelay);
         downloadedCount++;
     }
 
     downloadModal.classList.remove('show');
     if (downloadedCount > 0) {
-        showToast(`Files ${downloadedCount} ම Download වෙමින් පවතී...`);
+        showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
     } else {
         showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
     }
@@ -854,5 +839,5 @@ button:hover {
     syncAndRefresh(true);
     updateEditorStatus();
     updateErrorUI();
+    updateFloatingIcon(); // Apply copy/paste icon states correctly at start
 });
-
