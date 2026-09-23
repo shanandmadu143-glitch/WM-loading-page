@@ -289,9 +289,13 @@ codeAreas.forEach(area => {
 let syncTimeout = null;
 
 function saveCode() {
-    localStorage.setItem('savedHTML', htmlCode.value);
-    localStorage.setItem('savedCSS', cssCode.value);
-    localStorage.setItem('savedJS', jsCode.value);
+    try {
+        localStorage.setItem('savedHTML', htmlCode.value);
+        localStorage.setItem('savedCSS', cssCode.value);
+        localStorage.setItem('savedJS', jsCode.value);
+    } catch (e) {
+        console.error("LocalStorage save failed:", e);
+    }
 }
 
 function renderPreview() {
@@ -407,7 +411,7 @@ function processOpenedFile(name, content, handle = null) {
     else if (targetType === 'css') cssCode.value = content;
     else if (targetType === 'js') jsCode.value = content;
 
-    // Save File Handle & File Name
+    // Store File Handle & File Name
     fileHandles[targetType] = handle;
     fileNames[targetType] = name;
 
@@ -416,7 +420,7 @@ function processOpenedFile(name, content, handle = null) {
     showToast(`"${name}" විවෘත විය!`);
 }
 
-// Open File Feature (Updated for Multiple Files)
+// Open File Feature (Cross-Browser Supported)
 async function openFile() {
     if (window.showOpenFilePicker) {
         try {
@@ -438,14 +442,13 @@ async function openFile() {
                 const content = await file.text();
                 processOpenedFile(file.name, content, handle);
             }
+            return;
         } catch (err) {
-            if (err.name !== 'AbortError') {
-                fileInput.click();
-            }
+            if (err.name === 'AbortError') return;
+            console.warn("File System Access Open failed, falling back:", err);
         }
-    } else {
-        fileInput.click();
     }
+    fileInput.click();
 }
 
 btnOpenFile.addEventListener('click', openFile);
@@ -465,7 +468,7 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
 });
 
-// Auto Direct Save File Feature (Fixed freezing & permission issues)
+// Robust Auto Direct Save File Feature (Fixed freezing & cross-browser support)
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -476,24 +479,17 @@ async function saveActiveFile() {
     // LocalStorage Sync
     saveCode();
 
-    // 1. If File Handle exists, direct auto-save back to that original file safely
+    // 1. If File Handle exists, safely overwrite original file
     if (currentHandle && typeof currentHandle.createWritable === 'function') {
         try {
-            let permissionGranted = false;
-            try {
-                const opts = { mode: 'readwrite' };
-                const permissionState = await currentHandle.queryPermission(opts);
-                if (permissionState === 'granted') {
-                    permissionGranted = true;
-                } else if (permissionState === 'prompt') {
-                    const reqState = await currentHandle.requestPermission(opts);
-                    if (reqState === 'granted') permissionGranted = true;
+            let perm = 'granted';
+            if (typeof currentHandle.queryPermission === 'function') {
+                perm = await currentHandle.queryPermission({ mode: 'readwrite' });
+                if (perm !== 'granted' && typeof currentHandle.requestPermission === 'function') {
+                    perm = await currentHandle.requestPermission({ mode: 'readwrite' });
                 }
-            } catch (permErr) {
-                console.warn("Permission handling warning:", permErr);
             }
-
-            if (permissionGranted) {
+            if (perm === 'granted') {
                 const writable = await currentHandle.createWritable();
                 await writable.write(content);
                 await writable.close();
@@ -501,11 +497,12 @@ async function saveActiveFile() {
                 return;
             }
         } catch (err) {
-            console.error("Direct handle save failed, trying picker:", err);
+            console.warn("Direct file handle save error, resetting handle:", err);
+            fileHandles[type] = null; // Reset handle if permission/write fails to prevent freeze loops
         }
     }
 
-    // 2. Fallback to Save File Picker API if direct handle fails or isn't present
+    // 2. Fallback to Save File Picker API (For browsers supporting showSaveFilePicker without active handle)
     if (window.showSaveFilePicker) {
         try {
             const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
@@ -521,7 +518,7 @@ async function saveActiveFile() {
             await writable.write(content);
             await writable.close();
 
-            // Store new Handle for future auto-saves
+            // Store new Handle & Name for subsequent saves
             fileHandles[type] = handle;
             fileNames[type] = handle.name;
 
@@ -529,11 +526,11 @@ async function saveActiveFile() {
             return;
         } catch (err) {
             if (err.name === 'AbortError') return;
-            console.error("SaveFilePicker failed, using download fallback:", err);
+            console.warn("SaveFilePicker failed, falling back to download:", err);
         }
     }
 
-    // 3. Fallback for mobile devices & legacy browsers
+    // 3. Universal Fallback for Firefox, Safari, Mobile, and all other browsers
     executeDownload(content, defaultName, type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript');
 }
 
@@ -576,16 +573,22 @@ downloadModal.addEventListener('click', (e) => {
 });
 
 function executeDownload(content, fileName, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; 
-    a.download = fileName;
-    document.body.appendChild(a); 
-    a.click(); 
-    document.body.removeChild(a);
-    downloadModal.classList.remove('show');
-    showToast(`${fileName} Download වන ලදී!`);
+    try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; 
+        a.download = fileName;
+        document.body.appendChild(a); 
+        a.click(); 
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        downloadModal.classList.remove('show');
+        showToast(`${fileName} Download වන ලදී!`);
+    } catch (err) {
+        console.error("Download failed:", err);
+        showToast('Save කිරීම අසාර්ථක විය!');
+    }
 }
 
 document.getElementById('dl-bundle').addEventListener('click', () => {
@@ -684,6 +687,7 @@ button:hover {
 }`;
 
     htmlCode.value = localStorage.getItem('savedHTML') !== null ? localStorage.getItem('savedHTML') : defaultHTML;
+    cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultHTML; // fallback
     cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
     jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
 
