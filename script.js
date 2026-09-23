@@ -418,7 +418,7 @@ function processOpenedFile(name, content, handle = null) {
 
 // Open File Feature (Updated for Multiple Files)
 async function openFile() {
-    if ('showOpenFilePicker' in window) {
+    if (window.showOpenFilePicker) {
         try {
             const handles = await window.showOpenFilePicker({
                 types: [{
@@ -430,7 +430,7 @@ async function openFile() {
                         'text/plain': ['.txt']
                     }
                 }],
-                multiple: true // Allow selecting multiple files (HTML, CSS, JS) at once
+                multiple: true
             });
             
             for (const handle of handles) {
@@ -450,7 +450,7 @@ async function openFile() {
 
 btnOpenFile.addEventListener('click', openFile);
 
-// Legacy File Input Fallback (Updated for Multiple Files)
+// Legacy File Input Fallback
 fileInput.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -465,7 +465,7 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
 });
 
-// Auto Direct Save File Feature (Updated to overwrite original file)
+// Auto Direct Save File Feature (Fixed freezing & permission issues)
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -476,14 +476,24 @@ async function saveActiveFile() {
     // LocalStorage Sync
     saveCode();
 
-    // 1. If File Handle exists, direct auto-save back to that original file
-    if (currentHandle && 'createWritable' in currentHandle) {
+    // 1. If File Handle exists, direct auto-save back to that original file safely
+    if (currentHandle && typeof currentHandle.createWritable === 'function') {
         try {
-            let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
-            if (perm !== 'granted') {
-                perm = await currentHandle.requestPermission({ mode: 'readwrite' });
+            let permissionGranted = false;
+            try {
+                const opts = { mode: 'readwrite' };
+                const permissionState = await currentHandle.queryPermission(opts);
+                if (permissionState === 'granted') {
+                    permissionGranted = true;
+                } else if (permissionState === 'prompt') {
+                    const reqState = await currentHandle.requestPermission(opts);
+                    if (reqState === 'granted') permissionGranted = true;
+                }
+            } catch (permErr) {
+                console.warn("Permission handling warning:", permErr);
             }
-            if (perm === 'granted') {
+
+            if (permissionGranted) {
                 const writable = await currentHandle.createWritable();
                 await writable.write(content);
                 await writable.close();
@@ -491,12 +501,12 @@ async function saveActiveFile() {
                 return;
             }
         } catch (err) {
-            console.error("Direct handle save failed:", err);
+            console.error("Direct handle save failed, trying picker:", err);
         }
     }
 
-    // 2. Fallback to Save File Picker API (If no original file handle)
-    if ('showSaveFilePicker' in window) {
+    // 2. Fallback to Save File Picker API if direct handle fails or isn't present
+    if (window.showSaveFilePicker) {
         try {
             const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
             const ext = type === 'html' ? '.html' : type === 'css' ? '.css' : '.js';
@@ -519,11 +529,11 @@ async function saveActiveFile() {
             return;
         } catch (err) {
             if (err.name === 'AbortError') return;
-            console.error("SaveFilePicker failed:", err);
+            console.error("SaveFilePicker failed, using download fallback:", err);
         }
     }
 
-    // 3. Fallback for older browsers & mobile devices
+    // 3. Fallback for mobile devices & legacy browsers
     executeDownload(content, defaultName, type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript');
 }
 
