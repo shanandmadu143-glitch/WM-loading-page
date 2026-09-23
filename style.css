@@ -323,7 +323,7 @@ main {
 }
 
 #editor-container, #preview-container {
-    contain: layout style;
+    contain: layout style size;
 }
 
 #editor-container {
@@ -380,7 +380,8 @@ main {
     tab-size: 2; -moz-tab-size: 2; white-space: pre;
     -webkit-overflow-scrolling: touch;
     border-radius: 0;
-    contain: strict;
+    transform: translateZ(0);
+    will-change: transform;
 }
 .code-area.active { display: block; }
 #html-code { color: var(--text-main); }
