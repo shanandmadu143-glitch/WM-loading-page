@@ -119,6 +119,11 @@
                 <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
                 <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
 
+                <!-- Floating Copy Popup Icon (Bottom Left) -->
+                <button id="btn-floating-copy" class="floating-copy-btn" title="කේතය පිටපත් කරන්න (Copy Code)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+
                 <!-- Floating Delete Popup Icon (Bottom Right) -->
                 <button id="btn-floating-delete" class="floating-delete-btn" title="කේතය මකා දමන්න (Delete)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -137,7 +142,7 @@
         <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
     </footer>
 
-    <!-- Custom Alert / Confirm Modal UI -->
+    <!-- Custom Confirm Modal UI -->
     <div id="custom-modal" class="modal-overlay">
         <div class="modal-box">
             <div id="modal-icon" class="modal-icon"></div>
@@ -152,20 +157,29 @@
             <div class="modal-header">
                 <div class="modal-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Project Download
+                    Project Download Options
                 </div>
                 <button class="modal-close-btn" id="close-download-modal">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             <div class="download-options">
+                <div class="download-card highlight" id="dl-all">
+                    <div class="download-card-icon" style="color: #a6e22e; background: rgba(166, 226, 46, 0.15);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </div>
+                    <div>
+                        <div class="download-card-title">Download All Active Files</div>
+                        <div class="download-card-desc">දත්ත ඇතුළත් කර ඇති HTML, CSS, JS සියලුම ගොනු එකවර Download කරන්න.</div>
+                    </div>
+                </div>
                 <div class="download-card" id="dl-bundle">
                     <div class="download-card-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                     </div>
                     <div>
-                        <div class="download-card-title">Full Project (.html)</div>
-                        <div class="download-card-desc">HTML, CSS, JS සියල්ල එකට bundled index.html ලෙස.</div>
+                        <div class="download-card-title">Full Project Bundled (.html)</div>
+                        <div class="download-card-desc">HTML, CSS, JS සියල්ල එකට එකතු කළ index.html ලෙස.</div>
                     </div>
                 </div>
                 <div class="download-card" id="dl-html">
@@ -199,6 +213,31 @@
         </div>
     </div>
 
+    <!-- Error Details Modal UI -->
+    <div id="error-modal" class="modal-overlay">
+        <div class="modal-box error-modal-box">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f38ba8" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Error Details & Bug Tracker
+                </div>
+                <button class="modal-close-btn" id="close-error-modal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <p class="error-modal-desc">Web app එකෙහි සහ ඇතුළත් කළ කේතයන්හි හඳුනාගත් බෝද හෝ Errors සටහන පහතින් දැක්වේ:</p>
+            
+            <div id="error-list-container" class="error-list-container">
+                <!-- Dynamically Populated Errors -->
+            </div>
+
+            <div class="error-modal-actions">
+                <button id="btn-clear-errors" class="modal-btn btn-cancel">Clear Log</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal UI -->
     <div id="settings-modal" class="modal-overlay">
         <div class="modal-box">
@@ -216,10 +255,6 @@
             <div class="setting-group">
                 <span class="setting-label">Quick Actions / මෙවලම්</span>
                 <div class="settings-tools-grid">
-                    <button id="modal-btn-copy" class="settings-tool-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        Copy Code
-                    </button>
                     <button id="modal-btn-download" class="settings-tool-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Download
@@ -227,6 +262,11 @@
                     <button id="modal-btn-fullscreen" class="settings-tool-btn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
                         Fullscreen
+                    </button>
+                    <button id="modal-btn-errors" class="settings-tool-btn error-btn-accent">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        Error Details
+                        <span id="error-badge" class="error-badge">0</span>
                     </button>
                 </div>
             </div>
