@@ -673,3 +673,4 @@ button:hover {
     scheduleSync(true);
     updateEditorStatus();
 });
+
