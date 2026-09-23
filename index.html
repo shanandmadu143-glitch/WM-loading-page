@@ -119,8 +119,9 @@
                 <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
                 <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
 
-                <!-- Floating Copy Popup Icon (Bottom Left) -->
-                <button id="btn-floating-copy" class="floating-copy-btn" title="කේතය පිටපත් කරන්න (Copy Code)">
+                <!-- Floating Copy / Paste Popup Icon (Bottom Left) -->
+                <button id="btn-floating-copy" class="floating-copy-btn" title="කේතය පිටපත් කරන්න (Copy Code)" data-action="copy">
+                    <!-- Icon SVG is injected via JS dynamically based on state -->
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 </button>
 
@@ -141,7 +142,7 @@
         <div class="author-tag">Created by <span>Yomal Lakshan</span></div>
         <div class="sync-indicator" id="sync-indicator" title="Background Auto Sync Active">
             <span class="sync-dot"></span>
-            <span id="sync-text">Auto-Sync 4s</span>
+            <span id="sync-text">Smart Auto-Sync</span>
         </div>
         <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
     </footer>
