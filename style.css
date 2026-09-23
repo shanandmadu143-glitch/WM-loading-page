@@ -362,7 +362,6 @@ main {
     padding: 7px; border-radius: 6px;
 }
 .icon-btn:hover, .icon-btn:active { color: var(--accent-1); background: var(--btn-bg); }
-.icon-btn:hover#btn-clear { color: var(--accent-2); }
 .icon-btn:hover#btn-save-file { color: #a6e22e; }
 .icon-btn:hover#btn-open-file { color: #89b4fa; }
 
@@ -378,17 +377,49 @@ main {
 .code-area {
     flex: 1; width: 100%; height: 100%; background-color: var(--editor-bg); color: var(--text-main);
     font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; padding: 14px;
+    padding-bottom: 75px !important; /* Space for Floating Action Button */
     border: none; outline: none; resize: none; display: none; line-height: 1.5;
     tab-size: 2; -moz-tab-size: 2; white-space: pre;
     -webkit-overflow-scrolling: touch;
     border-radius: 0;
-    transform: translateZ(0);
-    will-change: transform;
+    contain: strict;
+    will-change: transform, scroll-position;
+    overscroll-behavior: contain;
 }
 .code-area.active { display: block; animation: fadeInArea 0.15s ease-out; }
 @keyframes fadeInArea {
     from { opacity: 0.6; }
     to { opacity: 1; }
+}
+
+/* Floating Delete Button (Popup FAB at bottom right) */
+.floating-delete-btn {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(243, 139, 168, 0.95);
+    color: #11111b;
+    border: none;
+    box-shadow: 0 8px 20px rgba(243, 139, 168, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 50;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+
+.floating-delete-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: #f38ba8;
+    box-shadow: 0 12px 25px rgba(243, 139, 168, 0.6);
+}
+
+.floating-delete-btn:active {
+    transform: scale(0.95);
 }
 
 #html-code { color: var(--text-main); }
@@ -483,6 +514,38 @@ main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 .setting-group { margin-bottom: 16px; text-align: left; }
 .setting-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
 
+/* Settings tools grid styling */
+.settings-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.settings-tool-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 10px 8px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition-smooth);
+}
+
+.settings-tool-btn:hover {
+    background: var(--dropdown-hover);
+    border-color: var(--accent-1);
+    color: var(--accent-1);
+}
+
 .theme-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
 .theme-card {
     background: var(--btn-bg); border: 1px solid var(--border-color); padding: 10px 14px;
@@ -533,4 +596,5 @@ main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
     .icon-btn { padding: 6px; }
     .code-area { font-size: 13px; padding: 10px; }
     .footer-banner { font-size: 10px; padding: 4px 8px; }
+    .floating-delete-btn { width: 42px; height: 42px; bottom: 20px; right: 20px; }
 }
