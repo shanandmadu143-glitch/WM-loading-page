@@ -413,14 +413,14 @@ function processOpenedFile(name, content, handle = null) {
 
     scheduleSync(true);
     updateEditorStatus();
-    showToast(`"${name}" සාර්ථකව විවෘත විය!`);
+    showToast(`"${name}" විවෘත විය!`);
 }
 
-// Open File Feature
+// Open File Feature (Updated for Multiple Files)
 async function openFile() {
     if ('showOpenFilePicker' in window) {
         try {
-            const [handle] = await window.showOpenFilePicker({
+            const handles = await window.showOpenFilePicker({
                 types: [{
                     description: 'Web Files (.html, .css, .js)',
                     accept: {
@@ -430,11 +430,14 @@ async function openFile() {
                         'text/plain': ['.txt']
                     }
                 }],
-                multiple: false
+                multiple: true // Allow selecting multiple files (HTML, CSS, JS) at once
             });
-            const file = await handle.getFile();
-            const content = await file.text();
-            processOpenedFile(file.name, content, handle);
+            
+            for (const handle of handles) {
+                const file = await handle.getFile();
+                const content = await file.text();
+                processOpenedFile(file.name, content, handle);
+            }
         } catch (err) {
             if (err.name !== 'AbortError') {
                 fileInput.click();
@@ -447,18 +450,22 @@ async function openFile() {
 
 btnOpenFile.addEventListener('click', openFile);
 
+// Legacy File Input Fallback (Updated for Multiple Files)
 fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        processOpenedFile(file.name, event.target.result, null);
-        fileInput.value = '';
-    };
-    reader.readAsText(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            processOpenedFile(file.name, event.target.result, null);
+        };
+        reader.readAsText(file);
+    });
+    fileInput.value = '';
 });
 
-// Auto Direct Save File Feature
+// Auto Direct Save File Feature (Updated to overwrite original file)
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -469,7 +476,7 @@ async function saveActiveFile() {
     // LocalStorage Sync
     saveCode();
 
-    // 1. If File Handle exists, direct auto-save back to that file
+    // 1. If File Handle exists, direct auto-save back to that original file
     if (currentHandle && 'createWritable' in currentHandle) {
         try {
             let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
@@ -480,7 +487,7 @@ async function saveActiveFile() {
                 const writable = await currentHandle.createWritable();
                 await writable.write(content);
                 await writable.close();
-                showToast(`"${fileNames[type]}" file එකට සාර්ථකව Auto Save විය!`);
+                showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
                 return;
             }
         } catch (err) {
@@ -488,7 +495,7 @@ async function saveActiveFile() {
         }
     }
 
-    // 2. Fallback to Save File Picker API
+    // 2. Fallback to Save File Picker API (If no original file handle)
     if ('showSaveFilePicker' in window) {
         try {
             const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
@@ -673,4 +680,3 @@ button:hover {
     scheduleSync(true);
     updateEditorStatus();
 });
-
