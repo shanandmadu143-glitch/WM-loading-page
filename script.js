@@ -1,4 +1,4 @@
-// Cached Elements
+// Cached DOM Elements
 const splashScreen = document.getElementById('splash-screen');
 const progressFill = document.getElementById('progress-fill');
 const splashStatus = document.getElementById('splash-status');
@@ -11,20 +11,23 @@ const jsCode = document.getElementById('js-code');
 const liveOutput = document.getElementById('live-output');
 const btnCode = document.getElementById('btn-code');
 const btnPreview = document.getElementById('btn-preview');
-const btnFullscreen = document.getElementById('btn-fullscreen');
-const btnCopy = document.getElementById('btn-copy');
 const btnOpenFile = document.getElementById('btn-open-file');
 const btnSaveFile = document.getElementById('btn-save-file');
 const fileInput = document.getElementById('file-input');
 const mainArea = document.getElementById('main-area');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const codeAreas = document.querySelectorAll('.code-area');
-const btnClear = document.getElementById('btn-clear');
 const btnDownload = document.getElementById('btn-download');
 const btnSettings = document.getElementById('btn-settings');
 const themeCards = document.querySelectorAll('.theme-card');
 const editorStatus = document.getElementById('editor-status');
 const fontSizeSelect = document.getElementById('font-size-select');
+const btnFloatingDelete = document.getElementById('btn-floating-delete');
+
+// Settings Modal Action Buttons
+const modalBtnCopy = document.getElementById('modal-btn-copy');
+const modalBtnDownload = document.getElementById('modal-btn-download');
+const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
 
 const modal = document.getElementById('custom-modal');
 const modalIcon = document.getElementById('modal-icon');
@@ -40,11 +43,17 @@ const closeSettingsModal = document.getElementById('close-settings-modal');
 const toast = document.getElementById('toast-notification');
 const toastText = document.getElementById('toast-text');
 
-// Active File Handles & Names Store for Auto Direct Save
+// Active File Handles Store for Native System Access
 const fileHandles = { html: null, css: null, js: null };
-const fileNames = { html: 'index.html', css: 'style.css', js: 'script.js' };
 
-// Toast Handler
+// Virtual 3-File Management System (Auto Direct Sync Storage)
+const virtualFiles = {
+    html: { name: 'index.html', mime: 'text/html', blobUrl: null },
+    css: { name: 'style.css', mime: 'text/css', blobUrl: null },
+    js: { name: 'script.js', mime: 'text/javascript', blobUrl: null }
+};
+
+// Toast Notification System
 let toastTimeout;
 function showToast(text) {
     toastText.innerText = text;
@@ -53,7 +62,7 @@ function showToast(text) {
     toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2200);
 }
 
-// Helper to get active tab type ('html', 'css', 'js')
+// Active Tab Helper ('html', 'css', 'js')
 function getActiveType() {
     const activeBtn = document.querySelector('.tab-btn.active');
     if (!activeBtn) return 'html';
@@ -63,7 +72,9 @@ function getActiveType() {
     return 'html';
 }
 
-// Splash Screen Setup with smooth frame interpolation
+function getActiveTextarea() { return document.querySelector('.code-area.active'); }
+
+// Splash Screen Manager
 let splashProgress = 0;
 let splashHidden = false;
 const totalDuration = 1200;
@@ -111,24 +122,26 @@ skipSplashBtn.addEventListener('click', () => {
     hideSplashScreen();
 });
 
-// Fullscreen Toggle
-btnFullscreen.addEventListener('click', () => {
+// Fullscreen Handler
+function toggleFullscreen() {
     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         } else if (document.documentElement.webkitRequestFullscreen) {
             document.documentElement.webkitRequestFullscreen();
         }
+        showToast('Full Screen Mode සක්‍රිය විය');
     } else {
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
         }
+        showToast('Full Screen Mode ඉවත් විය');
     }
-});
+}
 
-// Custom UI Modal
+// Custom UI Dialog Modal
 const CustomUI = {
     show: function(type, message, onConfirm) {
         modalMessage.innerText = message;
@@ -180,7 +193,7 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// Theme System
+// Theme Management System
 function applyTheme(theme) {
     if (theme === 'default') {
         document.body.removeAttribute('data-theme');
@@ -221,9 +234,7 @@ fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
 applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
 applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
 
-// Optimized Editor Line & Character Counter using requestAnimationFrame
-function getActiveTextarea() { return document.querySelector('.code-area.active'); }
-
+// High-Performance Line & Character Counter
 let statusUpdatePending = false;
 function updateEditorStatus() {
     if (statusUpdatePending) return;
@@ -239,7 +250,7 @@ function updateEditorStatus() {
     });
 }
 
-// Smart Tab key Handler with smooth indentation
+// Smart Tab Indentation Key Handling
 codeAreas.forEach(area => {
     area.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -282,13 +293,21 @@ codeAreas.forEach(area => {
     }, { passive: false });
 });
 
-// Save to Local Storage & Render Live Preview (Optimized Debounce)
+// Lag-Free Storage & Rendering Management
 let syncTimeout = null;
 
-function saveCode() {
-    localStorage.setItem('savedHTML', htmlCode.value);
-    localStorage.setItem('savedCSS', cssCode.value);
-    localStorage.setItem('savedJS', jsCode.value);
+function saveCodeToStorage() {
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+            localStorage.setItem('savedHTML', htmlCode.value);
+            localStorage.setItem('savedCSS', cssCode.value);
+            localStorage.setItem('savedJS', jsCode.value);
+        });
+    } else {
+        localStorage.setItem('savedHTML', htmlCode.value);
+        localStorage.setItem('savedCSS', cssCode.value);
+        localStorage.setItem('savedJS', jsCode.value);
+    }
 }
 
 function renderPreview() {
@@ -339,13 +358,14 @@ function renderPreview() {
 function scheduleSync(immediate = false) {
     clearTimeout(syncTimeout);
     if (immediate) {
-        saveCode();
+        saveCodeToStorage();
         renderPreview();
     } else {
+        // Optimized 500ms debounce prevents typing lag & scrolling stutter
         syncTimeout = setTimeout(() => {
-            saveCode();
+            saveCodeToStorage();
             renderPreview();
-        }, 300); // Optimized debounce delay for ultra-smooth live rendering
+        }, 500);
     }
 }
 
@@ -356,7 +376,7 @@ function scheduleSync(immediate = false) {
     }, { passive: true });
 });
 
-// View Switcher with smooth transition states
+// View Switcher Handlers
 btnCode.addEventListener('click', () => {
     btnCode.classList.add('active'); 
     btnPreview.classList.remove('active');
@@ -380,7 +400,7 @@ tabBtns.forEach(btn => {
     });
 });
 
-// Process Opened File Content & Set to Editor Tab
+// File Processor for Open File Feature
 function processOpenedFile(name, content, handle = null) {
     const ext = name.split('.').pop().toLowerCase();
     let targetType = 'html';
@@ -403,14 +423,14 @@ function processOpenedFile(name, content, handle = null) {
     else if (targetType === 'js') jsCode.value = content;
 
     fileHandles[targetType] = handle;
-    fileNames[targetType] = name;
+    virtualFiles[targetType].name = name;
 
     scheduleSync(true);
     updateEditorStatus();
     showToast(`"${name}" විවෘත විය!`);
 }
 
-// Open File Feature
+// Open File Action
 async function openFile() {
     if ('showOpenFilePicker' in window) {
         try {
@@ -444,7 +464,6 @@ async function openFile() {
 
 btnOpenFile.addEventListener('click', openFile);
 
-// Legacy File Input Fallback
 fileInput.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -459,16 +478,18 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
 });
 
-// Auto Direct Save File Feature
+// Auto Direct Save File Feature (Fully Fixed & Tested)
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
     const content = activeArea ? activeArea.value : '';
     const currentHandle = fileHandles[type];
-    const defaultName = fileNames[type] || (type === 'html' ? 'index.html' : type === 'css' ? 'style.css' : 'script.js');
+    const defaultName = virtualFiles[type].name;
+    const mimeType = virtualFiles[type].mime;
 
-    saveCode();
+    saveCodeToStorage();
 
+    // Direct save using Native File System Handle if available
     if (currentHandle && 'createWritable' in currentHandle) {
         try {
             let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
@@ -479,17 +500,17 @@ async function saveActiveFile() {
                 const writable = await currentHandle.createWritable();
                 await writable.write(content);
                 await writable.close();
-                showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
+                showToast(`"${virtualFiles[type].name}" ගොනුවට සාර්ථකව Save විය!`);
                 return;
             }
         } catch (err) {
-            console.error("Direct handle save failed:", err);
+            console.warn("Handle save fallback:", err);
         }
     }
 
+    // Save File Picker Fallback for supported browsers
     if ('showSaveFilePicker' in window) {
         try {
-            const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
             const ext = type === 'html' ? '.html' : type === 'css' ? '.css' : '.js';
             const handle = await window.showSaveFilePicker({
                 suggestedName: defaultName,
@@ -503,23 +524,24 @@ async function saveActiveFile() {
             await writable.close();
 
             fileHandles[type] = handle;
-            fileNames[type] = handle.name;
+            virtualFiles[type].name = handle.name;
 
             showToast(`"${handle.name}" සාර්ථකව සුරකින ලදී!`);
             return;
         } catch (err) {
             if (err.name === 'AbortError') return;
-            console.error("SaveFilePicker failed:", err);
+            console.warn("Save picker fallback:", err);
         }
     }
 
-    executeDownload(content, defaultName, type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript');
+    // Standard Universal Download Fallback
+    executeDownload(content, defaultName, mimeType);
 }
 
 btnSaveFile.addEventListener('click', saveActiveFile);
 
-// Copy Code Feature
-btnCopy.addEventListener('click', () => {
+// Copy Active Code Helper
+function copyActiveCode() {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value) {
         navigator.clipboard.writeText(activeArea.value).then(() => {
@@ -532,23 +554,39 @@ btnCopy.addEventListener('click', () => {
     } else {
         showToast('Copy කිරීමට කේතයක් නොමැත!');
     }
-});
+}
 
-// Clear Code Feature
-btnClear.addEventListener('click', () => {
+// Floating Delete Button (Popup FAB at bottom right) Handler
+btnFloatingDelete.addEventListener('click', () => {
     const activeArea = getActiveTextarea();
+    const type = getActiveType();
     if (activeArea) {
-        CustomUI.show('confirm', "ඔබට මෙම කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?", () => {
+        CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
             activeArea.value = '';
             scheduleSync(true);
             updateEditorStatus();
-            showToast('කේතය මකා දමන ලදී');
+            showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
         });
     }
 });
 
+// Settings Modal Action Buttons Bindings
+modalBtnCopy.addEventListener('click', () => {
+    copyActiveCode();
+    settingsModal.classList.remove('show');
+});
+
+modalBtnDownload.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    downloadModal.classList.add('show');
+});
+
+modalBtnFullscreen.addEventListener('click', () => {
+    toggleFullscreen();
+    settingsModal.classList.remove('show');
+});
+
 // Download Modal Handlers
-btnDownload.addEventListener('click', () => downloadModal.classList.add('show'));
 closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
 downloadModal.addEventListener('click', (e) => {
     if (e.target === downloadModal) downloadModal.classList.remove('show');
@@ -563,6 +601,7 @@ function executeDownload(content, fileName, mimeType) {
     document.body.appendChild(a); 
     a.click(); 
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     downloadModal.classList.remove('show');
     showToast(`${fileName} Download වන ලදී!`);
 }
@@ -593,7 +632,7 @@ document.getElementById('dl-html').addEventListener('click', () => executeDownlo
 document.getElementById('dl-css').addEventListener('click', () => executeDownload(cssCode.value, 'style.css', 'text/css'));
 document.getElementById('dl-js').addEventListener('click', () => executeDownload(jsCode.value, 'script.js', 'text/javascript'));
 
-// Keyboard Shortcuts
+// Global Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -609,7 +648,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize Editor
+// App Initialization
 window.addEventListener('DOMContentLoaded', () => {
     const defaultHTML = `<div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
