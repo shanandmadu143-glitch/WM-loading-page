@@ -289,13 +289,9 @@ codeAreas.forEach(area => {
 let syncTimeout = null;
 
 function saveCode() {
-    try {
-        localStorage.setItem('savedHTML', htmlCode.value);
-        localStorage.setItem('savedCSS', cssCode.value);
-        localStorage.setItem('savedJS', jsCode.value);
-    } catch (e) {
-        console.error("LocalStorage save failed:", e);
-    }
+    localStorage.setItem('savedHTML', htmlCode.value);
+    localStorage.setItem('savedCSS', cssCode.value);
+    localStorage.setItem('savedJS', jsCode.value);
 }
 
 function renderPreview() {
@@ -402,16 +398,13 @@ function processOpenedFile(name, content, handle = null) {
         targetType = getActiveType();
     }
 
-    // Switch to target tab
     const targetTabBtn = document.querySelector(`.tab-btn[data-target="${targetType}-code"]`);
     if (targetTabBtn) targetTabBtn.click();
 
-    // Set textarea content
     if (targetType === 'html') htmlCode.value = content;
     else if (targetType === 'css') cssCode.value = content;
     else if (targetType === 'js') jsCode.value = content;
 
-    // Store File Handle & File Name
     fileHandles[targetType] = handle;
     fileNames[targetType] = name;
 
@@ -420,9 +413,9 @@ function processOpenedFile(name, content, handle = null) {
     showToast(`"${name}" විවෘත විය!`);
 }
 
-// Open File Feature (Cross-Browser Supported)
+// Open File Feature
 async function openFile() {
-    if (window.showOpenFilePicker) {
+    if ('showOpenFilePicker' in window) {
         try {
             const handles = await window.showOpenFilePicker({
                 types: [{
@@ -442,13 +435,15 @@ async function openFile() {
                 const content = await file.text();
                 processOpenedFile(file.name, content, handle);
             }
-            return;
         } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.warn("File System Access Open failed, falling back:", err);
+            // User cancelled හෝ Error එකක් නම් සාමාන්‍ය ක්‍රමයට Fallback වේ
+            if (err.name !== 'AbortError') {
+                fileInput.click();
+            }
         }
+    } else {
+        fileInput.click();
     }
-    fileInput.click();
 }
 
 btnOpenFile.addEventListener('click', openFile);
@@ -468,7 +463,9 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = '';
 });
 
-// Robust Auto Direct Save File Feature (Fixed freezing & cross-browser support)
+// ==========================================
+// Auto Direct Save / Download Feature (FIXED)
+// ==========================================
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -476,34 +473,39 @@ async function saveActiveFile() {
     const currentHandle = fileHandles[type];
     const defaultName = fileNames[type] || (type === 'html' ? 'index.html' : type === 'css' ? 'style.css' : 'script.js');
 
-    // LocalStorage Sync
+    // LocalStorage එකට Save කිරීම (Backup)
     saveCode();
 
-    // 1. If File Handle exists, safely overwrite original file
-    if (currentHandle && typeof currentHandle.createWritable === 'function') {
-        try {
-            let perm = 'granted';
-            if (typeof currentHandle.queryPermission === 'function') {
-                perm = await currentHandle.queryPermission({ mode: 'readwrite' });
-                if (perm !== 'granted' && typeof currentHandle.requestPermission === 'function') {
+    // 1. File System Access API සපෝට් කරන Browser වල (Chrome, Edge වැනි)
+    if ('showSaveFilePicker' in window) {
+        // කලින් විවෘත කරපු File එකටම නැවත Save කිරීම
+        if (currentHandle && 'createWritable' in currentHandle) {
+            try {
+                let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
+                
+                // Permission නැත්නම් Popup එකෙන් විමසීම
+                if (perm !== 'granted') {
                     perm = await currentHandle.requestPermission({ mode: 'readwrite' });
                 }
+                
+                // පරිශීලකයා Permission ලබාදුන්නොත්
+                if (perm === 'granted') {
+                    const writable = await currentHandle.createWritable();
+                    await writable.write(content);
+                    await writable.close();
+                    showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
+                    return; // සාර්ථකව නිම විය
+                } else {
+                    showToast('Save කිරීමට Permission ලබා නොදුනි!');
+                    return; // ක්‍රියාවලිය නවත්වයි
+                }
+            } catch (err) {
+                console.warn("Direct save failed. Trying Save As...", err);
+                // යම් හෙයකින් File එක මකා දමා හෝ මාරු කර ඇත්නම් Fallback වේ
             }
-            if (perm === 'granted') {
-                const writable = await currentHandle.createWritable();
-                await writable.write(content);
-                await writable.close();
-                showToast(`"${fileNames[type]}" ගොනුවට සාර්ථකව Save විය!`);
-                return;
-            }
-        } catch (err) {
-            console.warn("Direct file handle save error, resetting handle:", err);
-            fileHandles[type] = null; // Reset handle if permission/write fails to prevent freeze loops
         }
-    }
 
-    // 2. Fallback to Save File Picker API (For browsers supporting showSaveFilePicker without active handle)
-    if (window.showSaveFilePicker) {
+        // 2. අලුත් ෆයිල් එකක් ලෙස Save කිරීම (Save As)
         try {
             const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
             const ext = type === 'html' ? '.html' : type === 'css' ? '.css' : '.js';
@@ -518,20 +520,21 @@ async function saveActiveFile() {
             await writable.write(content);
             await writable.close();
 
-            // Store new Handle & Name for subsequent saves
+            // ඊළඟ වතාවේ Auto save වීමට අලුත් Handle එක Store කිරීම
             fileHandles[type] = handle;
             fileNames[type] = handle.name;
 
             showToast(`"${handle.name}" සාර්ථකව සුරකින ලදී!`);
             return;
         } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.warn("SaveFilePicker failed, falling back to download:", err);
+            if (err.name === 'AbortError') return; // Cancel කළොත්
+            console.warn("SaveFilePicker failed:", err);
         }
     }
 
-    // 3. Universal Fallback for Firefox, Safari, Mobile, and all other browsers
-    executeDownload(content, defaultName, type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript');
+    // 3. Fallback: Firefox, Safari සහ Mobile Browsers සඳහා Download ක්‍රමය (API නැති විට)
+    const mimeType = type === 'html' ? 'text/html' : type === 'css' ? 'text/css' : 'text/javascript';
+    executeDownload(content, defaultName, mimeType);
 }
 
 btnSaveFile.addEventListener('click', saveActiveFile);
@@ -572,6 +575,7 @@ downloadModal.addEventListener('click', (e) => {
     if (e.target === downloadModal) downloadModal.classList.remove('show');
 });
 
+// Memory Leaks හා Freezes නොමැතිව Mobile/Safari වලට ගැළපෙන ලෙස සකසන ලද Download Function එක
 function executeDownload(content, fileName, mimeType) {
     try {
         const blob = new Blob([content], { type: mimeType });
@@ -579,15 +583,23 @@ function executeDownload(content, fileName, mimeType) {
         const a = document.createElement('a');
         a.href = url; 
         a.download = fileName;
+        
+        // Firefox/Safari වල ගැටළු වළක්වා ගැනීමට
+        a.style.display = 'none';
         document.body.appendChild(a); 
         a.click(); 
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
+        // Delay එකක් සහිතව Remove කිරීමෙන් Mobile Browsers වල Freeze වීම වළක්වයි
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 150);
+        
         downloadModal.classList.remove('show');
-        showToast(`${fileName} Download වන ලදී!`);
+        showToast(`${fileName} Download / Save විය!`);
     } catch (err) {
-        console.error("Download failed:", err);
-        showToast('Save කිරීම අසාර්ථක විය!');
+        console.error("Download execution error:", err);
+        showToast('Save කිරීමේදී දෝෂයක් මතු විය!');
     }
 }
 
@@ -687,7 +699,6 @@ button:hover {
 }`;
 
     htmlCode.value = localStorage.getItem('savedHTML') !== null ? localStorage.getItem('savedHTML') : defaultHTML;
-    cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultHTML; // fallback
     cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
     jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
 
