@@ -1,3 +1,7 @@
+// Global App & Error Logger System
+let errorLogs = [];
+let lastRenderedHash = '';
+
 // Cached DOM Elements
 const splashScreen = document.getElementById('splash-screen');
 const progressFill = document.getElementById('progress-fill');
@@ -23,8 +27,9 @@ const editorStatus = document.getElementById('editor-status');
 const fontSizeSelect = document.getElementById('font-size-select');
 const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
+const syncDot = document.querySelector('.sync-dot');
 
-// Settings Modal Action Buttons
+// Settings & Error Modal Action Elements
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
 const modalBtnErrors = document.getElementById('modal-btn-errors');
@@ -45,12 +50,10 @@ const errorModal = document.getElementById('error-modal');
 const closeErrorModal = document.getElementById('close-error-modal');
 const errorListContainer = document.getElementById('error-list-container');
 const btnClearErrors = document.getElementById('btn-clear-errors');
+const btnExportErrors = document.getElementById('btn-export-errors');
 
 const toast = document.getElementById('toast-notification');
 const toastText = document.getElementById('toast-text');
-
-// Error & Issue Logs Array
-let errorLogs = [];
 
 // Active File Handles Store for Native System Access
 const fileHandles = { html: null, css: null, js: null };
@@ -83,12 +86,34 @@ function getActiveType() {
 
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
-// Error Logging & Tracker Management
+// Advanced Error Logging & Tracker Management
 function addErrorLog(type, title, message) {
     const time = new Date().toLocaleTimeString();
+    // Avoid duplicate continuous logs
+    if (errorLogs.length > 0 && errorLogs[0].title === title && errorLogs[0].message === message) return;
+    
     errorLogs.unshift({ type, title, message, time });
+    if (errorLogs.length > 50) errorLogs.pop(); // Max 50 logs
     updateErrorUI();
 }
+
+// Intercept Application Global Runtime Errors
+window.addEventListener('error', function(e) {
+    addErrorLog('error', 'App Script Error', `${e.message || 'Unknown Error'} (${e.filename ? e.filename.split('/').pop() : 'App'}:${e.lineno || 0})`);
+});
+
+// Intercept Unhandled Promise Rejections
+window.addEventListener('unhandledrejection', function(e) {
+    addErrorLog('error', 'Unhandled Promise Rejection', e.reason ? (e.reason.message || String(e.reason)) : 'Promise Error');
+});
+
+// Intercept Console Errors
+const originalConsoleError = console.error;
+console.error = function(...args) {
+    originalConsoleError.apply(console, args);
+    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+    addErrorLog('error', 'Console Error Log', msg);
+};
 
 function updateErrorUI() {
     const errCount = errorLogs.filter(e => e.type === 'error').length;
@@ -105,7 +130,7 @@ function updateErrorUI() {
                 <div class="error-item-header">
                     <span class="error-item-title">System Status: OK</span>
                 </div>
-                <div class="error-item-msg">දැනට කිසිදු Error හෝ Bug එකක් වාර්තා වී නොමැත. කේත නිවැරදිව ක්‍රියාත්මක වේ.</div>
+                <div class="error-item-msg">දැනට කිසිදු Error හෝ Bug එකක් වාර්තා වී නොමැත. ඇප් එක නිවැරදිව ක්‍රියාත්මක වේ.</div>
             </div>`;
         return;
     }
@@ -127,6 +152,18 @@ btnClearErrors.addEventListener('click', () => {
     showToast('Error Log එක ရှင်း කරන ලදී');
 });
 
+if (btnExportErrors) {
+    btnExportErrors.addEventListener('click', () => {
+        if (errorLogs.length === 0) {
+            showToast('Export කිරීමට Logs නොමැත!');
+            return;
+        }
+        const logText = errorLogs.map(e => `[${e.time}] [${e.type.toUpperCase()}] ${e.title}: ${e.message}`).join('\n');
+        executeDownload(logText, 'error_logs_report.txt', 'text/plain');
+        showToast('Error Report එක Download විය');
+    });
+}
+
 modalBtnErrors.addEventListener('click', () => {
     settingsModal.classList.remove('show');
     errorModal.classList.add('show');
@@ -135,6 +172,13 @@ modalBtnErrors.addEventListener('click', () => {
 closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
 errorModal.addEventListener('click', (e) => {
     if (e.target === errorModal) errorModal.classList.remove('show');
+});
+
+// Listener for runtime errors posted from Live Output Iframe
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'custom_error_log') {
+        addErrorLog('error', event.data.title || 'JS Runtime Error', event.data.message);
+    }
 });
 
 // Splash Screen Manager
@@ -241,13 +285,6 @@ modal.addEventListener('click', (e) => {
     if (e.target === modal) CustomUI.close();
 });
 
-// Listener for runtime errors posted from Live Output Iframe
-window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'custom_error_log') {
-        addErrorLog('error', event.data.title || 'JS Runtime Error', event.data.message);
-    }
-});
-
 // Theme Management System
 function applyTheme(theme) {
     if (theme === 'default') {
@@ -342,21 +379,23 @@ codeAreas.forEach(area => {
                     this.selectionEnd = start + indentedText.length;
                 }
             }
-            scheduleSync();
             updateEditorStatus();
         }
     }, { passive: false });
 });
 
-// Lag-Free Storage & Rendering Management
-let syncTimeout = null;
-
+// Storage Management
 function saveCodeToStorage() {
-    localStorage.setItem('savedHTML', htmlCode.value);
-    localStorage.setItem('savedCSS', cssCode.value);
-    localStorage.setItem('savedJS', jsCode.value);
+    try {
+        localStorage.setItem('savedHTML', htmlCode.value);
+        localStorage.setItem('savedCSS', cssCode.value);
+        localStorage.setItem('savedJS', jsCode.value);
+    } catch(err) {
+        addErrorLog('error', 'Storage Full', 'LocalStorage memory limit exceeded');
+    }
 }
 
+// Live Output Preview Renderer
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
@@ -367,14 +406,21 @@ function renderPreview() {
 
     const bridgeScript = `
         <script>
-            window.onerror = function(msg, url, line) {
+            window.onerror = function(msg, url, line, col, err) {
                 window.parent.postMessage({ 
                     type: 'custom_error_log', 
-                    title: 'JavaScript Execution Error', 
-                    message: msg + ' (Line ' + line + ')' 
+                    title: 'Live Preview JS Error', 
+                    message: msg + ' (Line ' + line + (col ? (', Col ' + col) : '') + ')' 
                 }, '*');
                 return true;
             };
+            window.addEventListener('unhandledrejection', function(event) {
+                window.parent.postMessage({ 
+                    type: 'custom_error_log', 
+                    title: 'Live Preview Promise Error', 
+                    message: event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection' 
+                }, '*');
+            });
         <\/script>
     `;
 
@@ -395,7 +441,7 @@ function renderPreview() {
                 } catch(err) {
                     window.parent.postMessage({ 
                         type: 'custom_error_log', 
-                        title: 'JS Catch Exception', 
+                        title: 'Live Preview Execution Error', 
                         message: err.message 
                     }, '*');
                 }
@@ -407,22 +453,31 @@ function renderPreview() {
     liveOutput.srcdoc = fullDoc;
 }
 
-function scheduleSync(immediate = false) {
-    clearTimeout(syncTimeout);
-    if (immediate) {
+// Seamless Background Refresh (Triggers every 4 seconds without interrupting user editing)
+function getContentHash() {
+    return htmlCode.value + '||' + cssCode.value + '||' + jsCode.value;
+}
+
+function syncAndRefresh(force = false) {
+    const currentHash = getContentHash();
+    if (force || currentHash !== lastRenderedHash) {
+        if (syncDot) syncDot.classList.add('syncing');
         saveCodeToStorage();
         renderPreview();
-    } else {
-        syncTimeout = setTimeout(() => {
-            saveCodeToStorage();
-            renderPreview();
-        }, 500);
+        lastRenderedHash = currentHash;
+        setTimeout(() => {
+            if (syncDot) syncDot.classList.remove('syncing');
+        }, 400);
     }
 }
 
+// Automatic Periodic Timer Every 4 Seconds (4000ms)
+setInterval(() => {
+    syncAndRefresh(false);
+}, 4000);
+
 [htmlCode, cssCode, jsCode].forEach(textarea => {
     textarea.addEventListener('input', () => {
-        scheduleSync(false);
         updateEditorStatus();
     }, { passive: true });
 });
@@ -438,7 +493,7 @@ btnPreview.addEventListener('click', () => {
     btnPreview.classList.add('active'); 
     btnCode.classList.remove('active');
     mainArea.classList.add('show-preview');
-    scheduleSync(true); 
+    syncAndRefresh(true); 
 });
 
 tabBtns.forEach(btn => {
@@ -470,9 +525,9 @@ function processOpenedFile(name, content, handle = null) {
     fileHandles[targetType] = handle;
     virtualFiles[targetType].name = name;
 
-    scheduleSync(true);
+    syncAndRefresh(true);
     updateEditorStatus();
-    showToast(`"${name}" විවෘත විය!`);
+    showToast(`"${name}" વિવૃત විය!`);
 }
 
 async function openFile() {
@@ -539,7 +594,7 @@ async function saveActiveFile() {
                 return;
             }
         } catch (err) {
-            console.warn("Handle save fallback:", err);
+            addErrorLog('info', 'Save Fallback', 'Standard file save used');
         }
     }
 
@@ -574,7 +629,7 @@ btnFloatingDelete.addEventListener('click', () => {
     if (activeArea) {
         CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
             activeArea.value = '';
-            scheduleSync(true);
+            syncAndRefresh(true);
             updateEditorStatus();
             showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
         });
@@ -609,7 +664,7 @@ function executeDownload(content, fileName, mimeType) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Download All Active Files (Multi-file Batch Download)
+// Download All Active Files
 document.getElementById('dl-all').addEventListener('click', () => {
     let downloadedCount = 0;
     
@@ -676,7 +731,7 @@ document.getElementById('dl-js').addEventListener('click', () => {
     showToast('script.js Download වන ලදී!');
 });
 
-// Shortcuts
+// Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -746,7 +801,7 @@ button:hover {
     cssCode.value = localStorage.getItem('savedCSS') !== null ? localStorage.getItem('savedCSS') : defaultCSS;
     jsCode.value = localStorage.getItem('savedJS') !== null ? localStorage.getItem('savedJS') : defaultJS;
 
-    scheduleSync(true);
+    syncAndRefresh(true);
     updateEditorStatus();
     updateErrorUI();
 });
