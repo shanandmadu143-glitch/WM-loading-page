@@ -17,17 +17,18 @@ const fileInput = document.getElementById('file-input');
 const mainArea = document.getElementById('main-area');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const codeAreas = document.querySelectorAll('.code-area');
-const btnDownload = document.getElementById('btn-download');
 const btnSettings = document.getElementById('btn-settings');
 const themeCards = document.querySelectorAll('.theme-card');
 const editorStatus = document.getElementById('editor-status');
 const fontSizeSelect = document.getElementById('font-size-select');
+const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
 
 // Settings Modal Action Buttons
-const modalBtnCopy = document.getElementById('modal-btn-copy');
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
+const modalBtnErrors = document.getElementById('modal-btn-errors');
+const errorBadge = document.getElementById('error-badge');
 
 const modal = document.getElementById('custom-modal');
 const modalIcon = document.getElementById('modal-icon');
@@ -40,17 +41,25 @@ const closeDownloadModal = document.getElementById('close-download-modal');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsModal = document.getElementById('close-settings-modal');
 
+const errorModal = document.getElementById('error-modal');
+const closeErrorModal = document.getElementById('close-error-modal');
+const errorListContainer = document.getElementById('error-list-container');
+const btnClearErrors = document.getElementById('btn-clear-errors');
+
 const toast = document.getElementById('toast-notification');
 const toastText = document.getElementById('toast-text');
+
+// Error & Issue Logs Array
+let errorLogs = [];
 
 // Active File Handles Store for Native System Access
 const fileHandles = { html: null, css: null, js: null };
 
-// Virtual 3-File Management System (Auto Direct Sync Storage)
+// Virtual File Management
 const virtualFiles = {
-    html: { name: 'index.html', mime: 'text/html', blobUrl: null },
-    css: { name: 'style.css', mime: 'text/css', blobUrl: null },
-    js: { name: 'script.js', mime: 'text/javascript', blobUrl: null }
+    html: { name: 'index.html', mime: 'text/html' },
+    css: { name: 'style.css', mime: 'text/css' },
+    js: { name: 'script.js', mime: 'text/javascript' }
 };
 
 // Toast Notification System
@@ -73,6 +82,60 @@ function getActiveType() {
 }
 
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
+
+// Error Logging & Tracker Management
+function addErrorLog(type, title, message) {
+    const time = new Date().toLocaleTimeString();
+    errorLogs.unshift({ type, title, message, time });
+    updateErrorUI();
+}
+
+function updateErrorUI() {
+    const errCount = errorLogs.filter(e => e.type === 'error').length;
+    if (errorBadge) {
+        errorBadge.innerText = errCount;
+        errorBadge.style.display = errCount > 0 ? 'inline-block' : 'none';
+    }
+
+    if (!errorListContainer) return;
+
+    if (errorLogs.length === 0) {
+        errorListContainer.innerHTML = `
+            <div class="error-item ok">
+                <div class="error-item-header">
+                    <span class="error-item-title">System Status: OK</span>
+                </div>
+                <div class="error-item-msg">දැනට කිසිදු Error හෝ Bug එකක් වාර්තා වී නොමැත. කේත නිවැරදිව ක්‍රියාත්මක වේ.</div>
+            </div>`;
+        return;
+    }
+
+    errorListContainer.innerHTML = errorLogs.map(err => `
+        <div class="error-item ${err.type}">
+            <div class="error-item-header">
+                <span class="error-item-title">${err.title}</span>
+                <span class="error-item-time">${err.time}</span>
+            </div>
+            <div class="error-item-msg">${err.message}</div>
+        </div>
+    `).join('');
+}
+
+btnClearErrors.addEventListener('click', () => {
+    errorLogs = [];
+    updateErrorUI();
+    showToast('Error Log එක ရှင်း කරන ලදී');
+});
+
+modalBtnErrors.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    errorModal.classList.add('show');
+});
+
+closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
+errorModal.addEventListener('click', (e) => {
+    if (e.target === errorModal) errorModal.classList.remove('show');
+});
 
 // Splash Screen Manager
 let splashProgress = 0;
@@ -141,22 +204,13 @@ function toggleFullscreen() {
     }
 }
 
-// Custom UI Dialog Modal
+// Custom Confirm UI Modal
 const CustomUI = {
     show: function(type, message, onConfirm) {
         modalMessage.innerText = message;
         modalButtons.innerHTML = '';
         
-        if (type === 'alert') {
-            modalIcon.className = 'modal-icon alert';
-            modalIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
-            
-            const btnOk = document.createElement('button');
-            btnOk.className = 'modal-btn btn-ok';
-            btnOk.innerText = 'OK';
-            btnOk.onclick = () => this.close();
-            modalButtons.appendChild(btnOk);
-        } else if (type === 'confirm') {
+        if (type === 'confirm') {
             modalIcon.className = 'modal-icon confirm';
             modalIcon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
             
@@ -175,8 +229,8 @@ const CustomUI = {
             
             modalButtons.appendChild(btnCancel);
             modalButtons.appendChild(btnYes);
+            modal.classList.add('show');
         }
-        modal.classList.add('show');
     },
     close: function() {
         modal.classList.remove('show');
@@ -187,9 +241,10 @@ modal.addEventListener('click', (e) => {
     if (e.target === modal) CustomUI.close();
 });
 
+// Listener for runtime errors posted from Live Output Iframe
 window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'custom_alert') {
-        CustomUI.show('alert', event.data.message);
+    if (event.data && event.data.type === 'custom_error_log') {
+        addErrorLog('error', event.data.title || 'JS Runtime Error', event.data.message);
     }
 });
 
@@ -297,17 +352,9 @@ codeAreas.forEach(area => {
 let syncTimeout = null;
 
 function saveCodeToStorage() {
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-            localStorage.setItem('savedHTML', htmlCode.value);
-            localStorage.setItem('savedCSS', cssCode.value);
-            localStorage.setItem('savedJS', jsCode.value);
-        });
-    } else {
-        localStorage.setItem('savedHTML', htmlCode.value);
-        localStorage.setItem('savedCSS', cssCode.value);
-        localStorage.setItem('savedJS', jsCode.value);
-    }
+    localStorage.setItem('savedHTML', htmlCode.value);
+    localStorage.setItem('savedCSS', cssCode.value);
+    localStorage.setItem('savedJS', jsCode.value);
 }
 
 function renderPreview() {
@@ -320,12 +367,13 @@ function renderPreview() {
 
     const bridgeScript = `
         <script>
-            window.alert = function(msg) {
-                window.parent.postMessage({ type: 'custom_alert', message: String(msg) }, '*');
-            };
             window.onerror = function(msg, url, line) {
-                window.parent.postMessage({ type: 'custom_alert', message: 'JS Error: ' + msg + ' (Line ' + line + ')' }, '*');
-                return false;
+                window.parent.postMessage({ 
+                    type: 'custom_error_log', 
+                    title: 'JavaScript Execution Error', 
+                    message: msg + ' (Line ' + line + ')' 
+                }, '*');
+                return true;
             };
         <\/script>
     `;
@@ -345,7 +393,11 @@ function renderPreview() {
                 try {
                     ${safeJS}
                 } catch(err) {
-                    window.parent.postMessage({ type: 'custom_alert', message: 'JS Exception: ' + err.message }, '*');
+                    window.parent.postMessage({ 
+                        type: 'custom_error_log', 
+                        title: 'JS Catch Exception', 
+                        message: err.message 
+                    }, '*');
                 }
             <\/script>
         </body>
@@ -361,7 +413,6 @@ function scheduleSync(immediate = false) {
         saveCodeToStorage();
         renderPreview();
     } else {
-        // Optimized 500ms debounce prevents typing lag & scrolling stutter
         syncTimeout = setTimeout(() => {
             saveCodeToStorage();
             renderPreview();
@@ -405,15 +456,9 @@ function processOpenedFile(name, content, handle = null) {
     const ext = name.split('.').pop().toLowerCase();
     let targetType = 'html';
     
-    if (ext === 'css') {
-        targetType = 'css';
-    } else if (ext === 'js') {
-        targetType = 'js';
-    } else if (ext === 'html' || ext === 'htm') {
-        targetType = 'html';
-    } else {
-        targetType = getActiveType();
-    }
+    if (ext === 'css') targetType = 'css';
+    else if (ext === 'js') targetType = 'js';
+    else targetType = 'html';
 
     const targetTabBtn = document.querySelector(`.tab-btn[data-target="${targetType}-code"]`);
     if (targetTabBtn) targetTabBtn.click();
@@ -430,7 +475,6 @@ function processOpenedFile(name, content, handle = null) {
     showToast(`"${name}" විවෘත විය!`);
 }
 
-// Open File Action
 async function openFile() {
     if ('showOpenFilePicker' in window) {
         try {
@@ -446,16 +490,13 @@ async function openFile() {
                 }],
                 multiple: true
             });
-            
             for (const handle of handles) {
                 const file = await handle.getFile();
                 const content = await file.text();
                 processOpenedFile(file.name, content, handle);
             }
         } catch (err) {
-            if (err.name !== 'AbortError') {
-                fileInput.click();
-            }
+            if (err.name !== 'AbortError') fileInput.click();
         }
     } else {
         fileInput.click();
@@ -467,18 +508,15 @@ btnOpenFile.addEventListener('click', openFile);
 fileInput.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
     Array.from(files).forEach(file => {
         const reader = new FileReader();
-        reader.onload = (event) => {
-            processOpenedFile(file.name, event.target.result, null);
-        };
+        reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
         reader.readAsText(file);
     });
     fileInput.value = '';
 });
 
-// Auto Direct Save File Feature (Fully Fixed & Tested)
+// Save Active File Feature
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -489,13 +527,10 @@ async function saveActiveFile() {
 
     saveCodeToStorage();
 
-    // Direct save using Native File System Handle if available
     if (currentHandle && 'createWritable' in currentHandle) {
         try {
             let perm = await currentHandle.queryPermission({ mode: 'readwrite' });
-            if (perm !== 'granted') {
-                perm = await currentHandle.requestPermission({ mode: 'readwrite' });
-            }
+            if (perm !== 'granted') perm = await currentHandle.requestPermission({ mode: 'readwrite' });
             if (perm === 'granted') {
                 const writable = await currentHandle.createWritable();
                 await writable.write(content);
@@ -508,33 +543,6 @@ async function saveActiveFile() {
         }
     }
 
-    // Save File Picker Fallback for supported browsers
-    if ('showSaveFilePicker' in window) {
-        try {
-            const ext = type === 'html' ? '.html' : type === 'css' ? '.css' : '.js';
-            const handle = await window.showSaveFilePicker({
-                suggestedName: defaultName,
-                types: [{
-                    description: `${type.toUpperCase()} File`,
-                    accept: { [mimeType]: [ext] }
-                }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(content);
-            await writable.close();
-
-            fileHandles[type] = handle;
-            virtualFiles[type].name = handle.name;
-
-            showToast(`"${handle.name}" සාර්ථකව සුරකින ලදී!`);
-            return;
-        } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.warn("Save picker fallback:", err);
-        }
-    }
-
-    // Standard Universal Download Fallback
     executeDownload(content, defaultName, mimeType);
 }
 
@@ -543,7 +551,7 @@ btnSaveFile.addEventListener('click', saveActiveFile);
 // Copy Active Code Helper
 function copyActiveCode() {
     const activeArea = getActiveTextarea();
-    if (activeArea && activeArea.value) {
+    if (activeArea && activeArea.value.trim() !== '') {
         navigator.clipboard.writeText(activeArea.value).then(() => {
             showToast('කේතය සාර්ථකව Copy විය!');
         }).catch(() => {
@@ -556,7 +564,10 @@ function copyActiveCode() {
     }
 }
 
-// Floating Delete Button (Popup FAB at bottom right) Handler
+// Floating Copy Button (Popup FAB at Bottom Left)
+btnFloatingCopy.addEventListener('click', copyActiveCode);
+
+// Floating Delete Button (Popup FAB at Bottom Right)
 btnFloatingDelete.addEventListener('click', () => {
     const activeArea = getActiveTextarea();
     const type = getActiveType();
@@ -570,12 +581,7 @@ btnFloatingDelete.addEventListener('click', () => {
     }
 });
 
-// Settings Modal Action Buttons Bindings
-modalBtnCopy.addEventListener('click', () => {
-    copyActiveCode();
-    settingsModal.classList.remove('show');
-});
-
+// Download Options Handlers
 modalBtnDownload.addEventListener('click', () => {
     settingsModal.classList.remove('show');
     downloadModal.classList.add('show');
@@ -586,7 +592,6 @@ modalBtnFullscreen.addEventListener('click', () => {
     settingsModal.classList.remove('show');
 });
 
-// Download Modal Handlers
 closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
 downloadModal.addEventListener('click', (e) => {
     if (e.target === downloadModal) downloadModal.classList.remove('show');
@@ -602,9 +607,32 @@ function executeDownload(content, fileName, mimeType) {
     a.click(); 
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    downloadModal.classList.remove('show');
-    showToast(`${fileName} Download වන ලදී!`);
 }
+
+// Download All Active Files (Multi-file Batch Download)
+document.getElementById('dl-all').addEventListener('click', () => {
+    let downloadedCount = 0;
+    
+    if (htmlCode.value.trim() !== '') {
+        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), 50);
+        downloadedCount++;
+    }
+    if (cssCode.value.trim() !== '') {
+        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), 250);
+        downloadedCount++;
+    }
+    if (jsCode.value.trim() !== '') {
+        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), 450);
+        downloadedCount++;
+    }
+
+    downloadModal.classList.remove('show');
+    if (downloadedCount > 0) {
+        showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
+    } else {
+        showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
+    }
+});
 
 document.getElementById('dl-bundle').addEventListener('click', () => {
     const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
@@ -626,13 +654,29 @@ ${safeJsForExport}
 </body>
 </html>`;
     executeDownload(bundledContent, 'index.html', 'text/html');
+    downloadModal.classList.remove('show');
+    showToast('index.html Download වන ලදී!');
 });
 
-document.getElementById('dl-html').addEventListener('click', () => executeDownload(htmlCode.value, 'index.html', 'text/html'));
-document.getElementById('dl-css').addEventListener('click', () => executeDownload(cssCode.value, 'style.css', 'text/css'));
-document.getElementById('dl-js').addEventListener('click', () => executeDownload(jsCode.value, 'script.js', 'text/javascript'));
+document.getElementById('dl-html').addEventListener('click', () => {
+    executeDownload(htmlCode.value, 'index.html', 'text/html');
+    downloadModal.classList.remove('show');
+    showToast('index.html Download වන ලදී!');
+});
 
-// Global Keyboard Shortcuts
+document.getElementById('dl-css').addEventListener('click', () => {
+    executeDownload(cssCode.value, 'style.css', 'text/css');
+    downloadModal.classList.remove('show');
+    showToast('style.css Download වන ලදී!');
+});
+
+document.getElementById('dl-js').addEventListener('click', () => {
+    executeDownload(jsCode.value, 'script.js', 'text/javascript');
+    downloadModal.classList.remove('show');
+    showToast('script.js Download වන ලදී!');
+});
+
+// Shortcuts
 document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -640,11 +684,8 @@ document.addEventListener('keydown', (e) => {
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
-        if (mainArea.classList.contains('show-preview')) {
-            btnCode.click();
-        } else {
-            btnPreview.click();
-        }
+        if (mainArea.classList.contains('show-preview')) btnCode.click();
+        else btnPreview.click();
     }
 });
 
@@ -707,4 +748,5 @@ button:hover {
 
     scheduleSync(true);
     updateEditorStatus();
+    updateErrorUI();
 });
