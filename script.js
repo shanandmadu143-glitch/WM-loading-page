@@ -29,6 +29,10 @@ const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
 const syncDot = document.querySelector('.sync-dot');
 
+// Icons for Copy and Paste states
+const copyIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+const pasteIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+
 // Settings & Error Modal Action Elements
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
@@ -86,28 +90,39 @@ function getActiveType() {
 
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
+// Update Floating Icon to Copy or Paste based on empty text
+function updateFloatingIcon() {
+    const activeArea = getActiveTextarea();
+    if (activeArea) {
+        if (activeArea.value.trim() === '') {
+            btnFloatingCopy.innerHTML = pasteIconSVG;
+            btnFloatingCopy.setAttribute('title', 'කේතය Paste කරන්න (Paste Code)');
+            btnFloatingCopy.dataset.action = 'paste';
+        } else {
+            btnFloatingCopy.innerHTML = copyIconSVG;
+            btnFloatingCopy.setAttribute('title', 'කේතය පිටපත් කරන්න (Copy Code)');
+            btnFloatingCopy.dataset.action = 'copy';
+        }
+    }
+}
+
 // Advanced Error Logging & Tracker Management
 function addErrorLog(type, title, message) {
     const time = new Date().toLocaleTimeString();
-    // Avoid duplicate continuous logs
     if (errorLogs.length > 0 && errorLogs[0].title === title && errorLogs[0].message === message) return;
-    
     errorLogs.unshift({ type, title, message, time });
-    if (errorLogs.length > 50) errorLogs.pop(); // Max 50 logs
+    if (errorLogs.length > 50) errorLogs.pop();
     updateErrorUI();
 }
 
-// Intercept Application Global Runtime Errors
 window.addEventListener('error', function(e) {
     addErrorLog('error', 'App Script Error', `${e.message || 'Unknown Error'} (${e.filename ? e.filename.split('/').pop() : 'App'}:${e.lineno || 0})`);
 });
 
-// Intercept Unhandled Promise Rejections
 window.addEventListener('unhandledrejection', function(e) {
     addErrorLog('error', 'Unhandled Promise Rejection', e.reason ? (e.reason.message || String(e.reason)) : 'Promise Error');
 });
 
-// Intercept Console Errors
 const originalConsoleError = console.error;
 console.error = function(...args) {
     originalConsoleError.apply(console, args);
@@ -174,7 +189,6 @@ errorModal.addEventListener('click', (e) => {
     if (e.target === errorModal) errorModal.classList.remove('show');
 });
 
-// Listener for runtime errors posted from Live Output Iframe
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'custom_error_log') {
         addErrorLog('error', event.data.title || 'JS Runtime Error', event.data.message);
@@ -310,9 +324,7 @@ settingsModal.addEventListener('click', (e) => {
 });
 
 themeCards.forEach(card => {
-    card.addEventListener('click', () => {
-        applyTheme(card.getAttribute('data-theme'));
-    });
+    card.addEventListener('click', () => applyTheme(card.getAttribute('data-theme')));
 });
 
 function applyFontSize(size) {
@@ -335,8 +347,10 @@ function updateEditorStatus() {
         const activeArea = getActiveTextarea();
         if (activeArea) {
             const text = activeArea.value;
-            const lines = text ? text.split('\n').length : 1;
+            // High speed line counting using regex
+            const lines = (text.match(/\n/g) || []).length + 1;
             editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
+            updateFloatingIcon();
         }
         statusUpdatePending = false;
     });
@@ -453,7 +467,7 @@ function renderPreview() {
     liveOutput.srcdoc = fullDoc;
 }
 
-// Seamless Background Refresh (Triggers every 4 seconds without interrupting user editing)
+// Seamless Background Refresh
 function getContentHash() {
     return htmlCode.value + '||' + cssCode.value + '||' + jsCode.value;
 }
@@ -471,14 +485,16 @@ function syncAndRefresh(force = false) {
     }
 }
 
-// Automatic Periodic Timer Every 4 Seconds (4000ms)
-setInterval(() => {
-    syncAndRefresh(false);
-}, 4000);
-
+// Performance Fix: Smart Debounce Auto-Sync avoids Lag when typing
+let autoSyncTimer;
 [htmlCode, cssCode, jsCode].forEach(textarea => {
     textarea.addEventListener('input', () => {
         updateEditorStatus();
+        clearTimeout(autoSyncTimer);
+        // Wait 1.2s after user stops typing to compile and save, resolving all lags
+        autoSyncTimer = setTimeout(() => {
+            syncAndRefresh(false);
+        }, 1200);
     }, { passive: true });
 });
 
@@ -527,7 +543,7 @@ function processOpenedFile(name, content, handle = null) {
 
     syncAndRefresh(true);
     updateEditorStatus();
-    showToast(`"${name}" વિવૃત විය!`);
+    showToast(`"${name}" විවෘත විය!`);
 }
 
 async function openFile() {
@@ -619,8 +635,30 @@ function copyActiveCode() {
     }
 }
 
-// Floating Copy Button (Popup FAB at Bottom Left)
-btnFloatingCopy.addEventListener('click', copyActiveCode);
+// Floating Copy/Paste Button (Popup FAB at Bottom Left)
+btnFloatingCopy.addEventListener('click', async () => {
+    const action = btnFloatingCopy.dataset.action || 'copy';
+    const activeArea = getActiveTextarea();
+    if (!activeArea) return;
+
+    if (action === 'paste') {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+                activeArea.value = text;
+                updateEditorStatus();
+                syncAndRefresh(true);
+                showToast('කේතය සාර්ථකව Paste විය!');
+            } else {
+                showToast('Clipboard එක හිස්ව ඇත!');
+            }
+        } catch (err) {
+            showToast('කරුණාකර Paste කිරීමට Long Press/Ctrl+V භාවිත කරන්න');
+        }
+    } else {
+        copyActiveCode();
+    }
+});
 
 // Floating Delete Button (Popup FAB at Bottom Right)
 btnFloatingDelete.addEventListener('click', () => {
@@ -653,37 +691,49 @@ downloadModal.addEventListener('click', (e) => {
 });
 
 function executeDownload(content, fileName, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; 
-    a.download = fileName;
-    document.body.appendChild(a); 
-    a.click(); 
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    try {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url; 
+        a.download = fileName;
+        document.body.appendChild(a); 
+        a.click(); 
+        
+        // Timeout prevents crash before Mobile OS handles download
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 2000);
+    } catch(err) {
+        addErrorLog('error', 'Download Error', err.message);
+    }
 }
 
-// Download All Active Files
+// Download All Active Files (Crash Fix Applied)
 document.getElementById('dl-all').addEventListener('click', () => {
     let downloadedCount = 0;
+    let delay = 0; // Stagger downloads to prevent browser crash
     
     if (htmlCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), 50);
+        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), delay);
         downloadedCount++;
+        delay += 1000; // 1s wait between downloads
     }
     if (cssCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), 250);
+        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), delay);
         downloadedCount++;
+        delay += 1000;
     }
     if (jsCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), 450);
+        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), delay);
         downloadedCount++;
     }
 
     downloadModal.classList.remove('show');
     if (downloadedCount > 0) {
-        showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
+        showToast(`Files ${downloadedCount} ම Download වෙමින් පවතී...`);
     } else {
         showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
     }
