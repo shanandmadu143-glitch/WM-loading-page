@@ -90,12 +90,10 @@ function getActiveTextarea() { return document.querySelector('.code-area.active'
 function updateFloatingIcon() {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value.trim() === '') {
-        // Change to Paste Icon
         btnFloatingCopy.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>';
         btnFloatingCopy.title = "කේතය Paste කරන්න (Paste)";
         btnFloatingCopy.setAttribute('data-action', 'paste');
     } else {
-        // Change to Copy Icon
         btnFloatingCopy.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
         btnFloatingCopy.title = "කේතය පිටපත් කරන්න (Copy)";
         btnFloatingCopy.setAttribute('data-action', 'copy');
@@ -392,7 +390,6 @@ codeAreas.forEach(area => {
             updateEditorStatus();
             updateFloatingIcon();
             
-            // Trigger background sync after tab
             clearTimeout(syncTimeout);
             syncTimeout = setTimeout(() => { syncAndRefresh(false); }, 1000);
         }
@@ -409,29 +406,45 @@ function saveCodeToStorage() {
     }
 }
 
+// Improved Live Preview Renderer with robust error catching & prevention for Null Element addEventListener & SyntaxError '<'
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
     const js = jsCode.value;
     
+    // Check if JS contains accidental HTML tags causing Unexpected token '<'
+    if (js.trim().match(/<[a-z][\s\S]*>/i)) {
+        addErrorLog('error', 'JS Syntax Warning', 'HTML tags detected in JavaScript editor. This causes "Unexpected token <". Please move HTML code to the HTML tab.');
+    }
+
     const safeJS = js.replace(/<\/script>/gi, '<\\/script>');
     const safeCSS = css.replace(/<\/style>/gi, '<\\/style>');
 
     const bridgeScript = `
         <script>
             window.onerror = function(msg, url, line, col, err) {
+                let banner = document.getElementById('preview-error-banner');
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.id = 'preview-error-banner';
+                    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f38ba8;color:#11111b;padding:8px 12px;font-family:sans-serif;font-size:12px;z-index:999999;box-shadow:0 2px 10px rgba(0,0,0,0.3);display:flex;justify-content:space-between;align-items:center;';
+                    document.body.insertBefore(banner, document.body.firstChild);
+                }
+                banner.innerHTML = '<span>⚠️ <strong>Runtime Error:</strong> ' + msg + '</span><button onclick="this.parentElement.remove()" style="background:#11111b;color:#f38ba8;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;">✕</button>';
+
                 window.parent.postMessage({ 
                     type: 'custom_error_log', 
-                    title: 'Live Preview JS Error', 
-                    message: msg + ' (Line ' + line + (col ? (', Col ' + col) : '') + ')' 
+                    title: 'Live Preview Execution Error', 
+                    message: msg + (line ? ' (Line ' + line + (col ? ', Col ' + col : '') + ')' : '') 
                 }, '*');
                 return true;
             };
             window.addEventListener('unhandledrejection', function(event) {
+                let errMsg = event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection';
                 window.parent.postMessage({ 
                     type: 'custom_error_log', 
                     title: 'Live Preview Promise Error', 
-                    message: event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection' 
+                    message: errMsg 
                 }, '*');
             });
         <\/script>
@@ -483,7 +496,6 @@ function syncAndRefresh(force = false) {
     }
 }
 
-// Performance Optimized: Debounce mechanism instead of continuous setInterval (Fixes Lag)
 let syncTimeout;
 [htmlCode, cssCode, jsCode].forEach(textarea => {
     textarea.addEventListener('input', () => {
@@ -493,7 +505,7 @@ let syncTimeout;
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(() => {
             syncAndRefresh(false);
-        }, 1000); // Trigger saving and syncing 1 second after user STOPS typing
+        }, 1000);
     }, { passive: true });
 });
 
@@ -518,7 +530,7 @@ tabBtns.forEach(btn => {
         btn.classList.add('active');
         document.getElementById(btn.dataset.target).classList.add('active');
         updateEditorStatus();
-        updateFloatingIcon(); // update Copy/Paste Icon on Tab switch
+        updateFloatingIcon();
     });
 });
 
@@ -662,7 +674,7 @@ btnFloatingDelete.addEventListener('click', () => {
             activeArea.value = '';
             syncAndRefresh(true);
             updateEditorStatus();
-            updateFloatingIcon(); // Reset to Paste icon
+            updateFloatingIcon();
             showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
         });
     }
@@ -693,10 +705,9 @@ function executeDownload(content, fileName, mimeType) {
     document.body.appendChild(a); 
     a.click(); 
     document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000); // Increased timeout to prevent crash
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-// Download All Active Files (Crash fix - Added safe delays between downloads)
 document.getElementById('dl-all').addEventListener('click', () => {
     let downloadedCount = 0;
     let baseDelay = 100;
@@ -784,7 +795,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const defaultHTML = `<div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
   <p>ඔබගේ HTML.codes Live Editor එක සාර්ථකව වැඩ කරයි.</p>
-  <button onclick="sayHello()">Click Me</button>
+  <button id="hello-btn">Click Me</button>
 </div>`;
 
     const defaultCSS = `body {
@@ -813,7 +824,7 @@ h1 { color: #f38ba8; margin-bottom: 10px; font-size: 24px; }
 p { color: #94a3b8; font-size: 14px; }
 button {
   background: #89b4fa;
-  color: #11111b;
+  default-color: #11111b;
   border: none;
   padding: 12px 24px;
   font-size: 14px;
@@ -828,8 +839,11 @@ button:hover {
   transform: translateY(-2px);
 }`;
 
-    const defaultJS = `function sayHello() {
-  alert('සාර්ථකයි! ඔබගේ JavaScript එක හරියටම වැඩ කරනවා 🎉');
+    const defaultJS = `const btn = document.getElementById('hello-btn');
+if (btn) {
+  btn.addEventListener('click', function() {
+    alert('සාර්ථකයි! ඔබගේ JavaScript එක හරියටම වැඩ කරනවා 🎉');
+  });
 }`;
 
     htmlCode.value = localStorage.getItem('savedHTML') !== null ? localStorage.getItem('savedHTML') : defaultHTML;
@@ -839,5 +853,5 @@ button:hover {
     syncAndRefresh(true);
     updateEditorStatus();
     updateErrorUI();
-    updateFloatingIcon(); // Apply copy/paste icon states correctly at start
+    updateFloatingIcon();
 });
