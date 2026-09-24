@@ -11,10 +11,10 @@
     --editor-bg: #1e1e2e;
     --dropdown-bg: #313244;
     --dropdown-hover: #45475a;
-    --modal-bg: rgba(17, 17, 27, 0.82);
-    --glow-color: rgba(137, 180, 250, 0.2);
+    --modal-bg: rgba(17, 17, 27, 0.85);
+    --glow-color: rgba(137, 180, 250, 0.18);
     --border-color: rgba(255, 255, 255, 0.08);
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="light"] {
@@ -29,7 +29,7 @@
     --editor-bg: #ffffff;
     --dropdown-bg: #ffffff;
     --dropdown-hover: #f3f4f6;
-    --modal-bg: rgba(255, 255, 255, 0.82);
+    --modal-bg: rgba(255, 255, 255, 0.88);
     --glow-color: rgba(37, 99, 235, 0.12);
     --border-color: rgba(0, 0, 0, 0.08);
 }
@@ -46,7 +46,7 @@
     --editor-bg: #272822;
     --dropdown-bg: #3e3d32;
     --dropdown-hover: #49483e;
-    --modal-bg: rgba(30, 31, 28, 0.82);
+    --modal-bg: rgba(30, 31, 28, 0.88);
     --glow-color: rgba(166, 226, 46, 0.15);
     --border-color: rgba(255, 255, 255, 0.08);
 }
@@ -63,7 +63,7 @@
     --editor-bg: #282a36;
     --dropdown-bg: #44475a;
     --dropdown-hover: #6272a4;
-    --modal-bg: rgba(25, 26, 33, 0.82);
+    --modal-bg: rgba(25, 26, 33, 0.88);
     --glow-color: rgba(189, 147, 249, 0.2);
     --border-color: rgba(255, 255, 255, 0.08);
 }
@@ -80,7 +80,7 @@
     --editor-bg: #0d1117;
     --dropdown-bg: #161b22;
     --dropdown-hover: #21262d;
-    --modal-bg: rgba(1, 4, 9, 0.82);
+    --modal-bg: rgba(1, 4, 9, 0.88);
     --glow-color: rgba(88, 166, 255, 0.15);
     --border-color: rgba(255, 255, 255, 0.08);
 }
@@ -100,14 +100,14 @@ html, body {
     touch-action: manipulation;
 }
 
-/* Offline සහාය සඳහා System Fonts ශක්තිමත්ව ඇතුළත් කර ඇත */
+/* System Font Fallbacks for 100% Smooth Offline Support */
 body {
     font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
     display: flex;
     flex-direction: column;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 svg {
@@ -126,9 +126,6 @@ svg {
     position: fixed;
     inset: 0;
     background: #090a10;
-    background-image: 
-        radial-gradient(circle at 20% 20%, rgba(137, 180, 250, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(243, 139, 168, 0.1) 0%, transparent 40%);
     z-index: 99999;
     display: flex;
     align-items: center;
@@ -136,8 +133,7 @@ svg {
     padding: 15px;
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: opacity, visibility;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .splash-overlay.hide {
@@ -147,9 +143,7 @@ svg {
 }
 
 .splash-card {
-    background: rgba(17, 17, 27, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(17, 17, 27, 0.95);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 30px 20px;
@@ -158,14 +152,13 @@ svg {
     max-height: 90dvh;
     overflow-y: auto;
     text-align: center;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--glow-color);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--glow-color);
     position: relative;
-    animation: splashEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: transform, opacity;
+    animation: splashEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes splashEntrance {
-    from { opacity: 0; transform: scale(0.96) translateY(12px); }
+    from { opacity: 0; transform: scale(0.97) translateY(10px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -241,9 +234,8 @@ svg {
     height: 100%;
     background: linear-gradient(90deg, #89b4fa, #f38ba8);
     border-radius: 10px;
-    transition: width 0.06s linear;
+    transition: width 0.05s linear;
     box-shadow: 0 0 10px rgba(137, 180, 250, 0.7);
-    will-change: width;
 }
 
 .skip-btn {
@@ -331,8 +323,7 @@ main {
 #editor-container {
     display: flex; flex-direction: column; height: 100%; width: 100%;
     position: absolute; top: 0; left: 0; 
-    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: opacity, transform;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-header {
@@ -375,81 +366,61 @@ main {
     background-color: var(--editor-bg);
 }
 
+/* Optimized Code Area with Zero Lag */
 .code-area {
     flex: 1; width: 100%; height: 100%; background-color: var(--editor-bg); color: var(--text-main);
     font-family: 'Fira Code', 'Consolas', 'Courier New', monospace; font-size: 14px; padding: 14px;
-    padding-bottom: 75px !important;
+    padding-bottom: 80px !important;
     border: none; outline: none; resize: none; display: none; line-height: 1.5;
     tab-size: 2; -moz-tab-size: 2; white-space: pre;
     -webkit-overflow-scrolling: touch;
     border-radius: 0;
-    contain: strict;
-    will-change: transform, scroll-position;
+    contain: layout style;
     overscroll-behavior: contain;
 }
-.code-area.active { display: block; animation: fadeInArea 0.15s ease-out; }
-@keyframes fadeInArea {
-    from { opacity: 0.6; }
-    to { opacity: 1; }
-}
+.code-area.active { display: block; }
 
-/* Floating Delete Button (Popup FAB at bottom right) */
-.floating-delete-btn {
+/* Floating Action Buttons */
+.floating-delete-btn, .floating-copy-btn {
     position: absolute;
     bottom: 25px;
-    right: 25px;
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(243, 139, 168, 0.95);
-    color: #11111b;
     border: none;
-    box-shadow: 0 8px 20px rgba(243, 139, 168, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 50;
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25), background-color 0.2s ease;
+}
+
+.floating-delete-btn {
+    right: 25px;
+    background: rgba(243, 139, 168, 0.95);
+    color: #11111b;
+    box-shadow: 0 8px 20px rgba(243, 139, 168, 0.35);
 }
 
 .floating-delete-btn:hover {
-    transform: scale(1.1) translateY(-2px);
+    transform: scale(1.08) translateY(-2px);
     background: #f38ba8;
-    box-shadow: 0 12px 25px rgba(243, 139, 168, 0.6);
 }
 
-.floating-delete-btn:active {
-    transform: scale(0.95);
-}
-
-/* Floating Copy/Paste Button (Popup FAB at bottom left) */
 .floating-copy-btn {
-    position: absolute;
-    bottom: 25px;
     left: 25px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
     background: rgba(137, 180, 250, 0.95);
     color: #11111b;
-    border: none;
-    box-shadow: 0 8px 20px rgba(137, 180, 250, 0.4), 0 0 15px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 50;
-    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+    box-shadow: 0 8px 20px rgba(137, 180, 250, 0.35);
 }
 
 .floating-copy-btn:hover {
-    transform: scale(1.1) translateY(-2px);
+    transform: scale(1.08) translateY(-2px);
     background: #89b4fa;
-    box-shadow: 0 12px 25px rgba(137, 180, 250, 0.6);
 }
 
-.floating-copy-btn:active {
+.floating-copy-btn:active, .floating-delete-btn:active {
     transform: scale(0.95);
 }
 
@@ -463,12 +434,11 @@ main {
 #preview-container {
     height: 100%; width: 100%; position: absolute; top: 0; left: 0;
     background-color: #ffffff; opacity: 0; pointer-events: none; 
-    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: opacity;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #preview-container iframe { width: 100%; height: 100%; border: none; background-color: #ffffff; }
 
-main.show-preview #editor-container { opacity: 0; pointer-events: none; transform: scale(0.99); }
+main.show-preview #editor-container { opacity: 0; pointer-events: none; }
 main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 
 .footer-banner {
@@ -489,26 +459,23 @@ main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 .footer-banner span { color: var(--accent-1); font-weight: 600; }
 .editor-status { font-family: 'Fira Code', 'Consolas', monospace; font-size: 10px; color: var(--text-muted); white-space: nowrap; }
 
-/* Modal Optimizations */
+/* Modal Styles */
 .modal-overlay {
-    position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    position: fixed; inset: 0; background: var(--modal-bg);
     display: flex; align-items: center; justify-content: center; z-index: 9999;
-    opacity: 0; visibility: hidden; transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1); padding: 15px;
-    will-change: opacity, visibility;
+    opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; padding: 15px;
 }
 .modal-overlay.show { opacity: 1; visibility: visible; }
 
 .modal-box {
     background: var(--bg-header); padding: 22px 20px; border-radius: 18px; width: 100%; max-width: 380px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 35px var(--glow-color); 
-    transform: scale(0.92) translateY(15px);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 25px var(--glow-color); 
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.15);
     text-align: center; border: 1px solid var(--border-color);
     position: relative;
-    will-change: transform;
 }
-.modal-overlay.show .modal-box { transform: scale(1) translateY(0); }
+.modal-overlay.show .modal-box { transform: scale(1); }
 
 .modal-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -655,9 +622,8 @@ main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
     background: var(--bg-header); color: var(--text-main); padding: 9px 18px; border-radius: 20px;
     font-size: 12px; font-weight: 500; border: 1px solid var(--accent-1);
     box-shadow: 0 10px 25px rgba(0,0,0,0.35); opacity: 0; pointer-events: none; 
-    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.25), opacity 0.25s ease;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25), opacity 0.2s ease;
     z-index: 10000; display: flex; align-items: center; gap: 8px;
-    will-change: transform, opacity;
 }
 .toast-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
