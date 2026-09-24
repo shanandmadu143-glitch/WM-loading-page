@@ -100,7 +100,7 @@ html, body {
     touch-action: manipulation;
 }
 
-/* Offline සහාය සඳහා System-ui ෆොන්ට්ස් ඇතුලත් කර ඇත */
+/* Offline සහාය සඳහා System Fonts ශක්තිමත්ව ඇතුළත් කර ඇත */
 body {
     font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-main);
