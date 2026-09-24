@@ -1,3 +1,12 @@
+// Service Worker Registration for Offline Capabilities
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker Registered Successfully for Offline mode'))
+            .catch(err => console.warn('Service Worker Registration Failed:', err));
+    });
+}
+
 // Global App & Error Logger System
 let errorLogs = [];
 let lastRenderedHash = '';
@@ -156,11 +165,13 @@ function updateErrorUI() {
     `).join('');
 }
 
-btnClearErrors.addEventListener('click', () => {
-    errorLogs = [];
-    updateErrorUI();
-    showToast('Error Log එක ရှင်း කරන ලදී');
-});
+if (btnClearErrors) {
+    btnClearErrors.addEventListener('click', () => {
+        errorLogs = [];
+        updateErrorUI();
+        showToast('Error Log එක ရှင်း කරන ලදී');
+    });
+}
 
 if (btnExportErrors) {
     btnExportErrors.addEventListener('click', () => {
@@ -174,15 +185,19 @@ if (btnExportErrors) {
     });
 }
 
-modalBtnErrors.addEventListener('click', () => {
-    settingsModal.classList.remove('show');
-    errorModal.classList.add('show');
-});
+if (modalBtnErrors) {
+    modalBtnErrors.addEventListener('click', () => {
+        settingsModal.classList.remove('show');
+        errorModal.classList.add('show');
+    });
+}
 
-closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
-errorModal.addEventListener('click', (e) => {
-    if (e.target === errorModal) errorModal.classList.remove('show');
-});
+if (closeErrorModal) closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
+if (errorModal) {
+    errorModal.addEventListener('click', (e) => {
+        if (e.target === errorModal) errorModal.classList.remove('show');
+    });
+}
 
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'custom_error_log') {
@@ -209,8 +224,11 @@ const statusMessages = [
 function hideSplashScreen() {
     if (splashHidden) return;
     splashHidden = true;
-    splashScreen.classList.add('hide');
-    setTimeout(() => { splashScreen.style.display = 'none'; }, 350);
+    if (splashInterval) clearInterval(splashInterval);
+    if (splashScreen) {
+        splashScreen.classList.add('hide');
+        setTimeout(() => { splashScreen.style.display = 'none'; }, 350);
+    }
 }
 
 const splashInterval = setInterval(() => {
@@ -222,21 +240,23 @@ const splashInterval = setInterval(() => {
     }
 
     const currentPct = Math.floor(splashProgress);
-    progressFill.style.width = currentPct + '%';
-    splashPercent.innerText = currentPct + '%';
+    if (progressFill) progressFill.style.width = currentPct + '%';
+    if (splashPercent) splashPercent.innerText = currentPct + '%';
 
     for (let i = statusMessages.length - 1; i >= 0; i--) {
         if (currentPct >= statusMessages[i].pct) {
-            splashStatus.innerText = statusMessages[i].text;
+            if (splashStatus) splashStatus.innerText = statusMessages[i].text;
             break;
         }
     }
 }, intervalTime);
 
-skipSplashBtn.addEventListener('click', () => {
-    clearInterval(splashInterval);
-    hideSplashScreen();
-});
+if (skipSplashBtn) {
+    skipSplashBtn.addEventListener('click', () => {
+        clearInterval(splashInterval);
+        hideSplashScreen();
+    });
+}
 
 // Fullscreen Handler
 function toggleFullscreen() {
@@ -290,9 +310,11 @@ const CustomUI = {
     }
 };
 
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) CustomUI.close();
-});
+if (modal) {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) CustomUI.close();
+    });
+}
 
 // Theme Management System
 function applyTheme(theme) {
@@ -312,11 +334,13 @@ function applyTheme(theme) {
     });
 }
 
-btnSettings.addEventListener('click', () => settingsModal.classList.add('show'));
-closeSettingsModal.addEventListener('click', () => settingsModal.classList.remove('show'));
-settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) settingsModal.classList.remove('show');
-});
+if (btnSettings) btnSettings.addEventListener('click', () => settingsModal.classList.add('show'));
+if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.classList.remove('show'));
+if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) settingsModal.classList.remove('show');
+    });
+}
 
 themeCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -330,7 +354,9 @@ function applyFontSize(size) {
     if (fontSizeSelect) fontSizeSelect.value = size;
 }
 
-fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
+if (fontSizeSelect) {
+    fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
+}
 
 applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
 applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
@@ -345,7 +371,7 @@ function updateEditorStatus() {
         if (activeArea) {
             const text = activeArea.value;
             const lines = text ? text.split('\n').length : 1;
-            editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
+            if (editorStatus) editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
         }
         statusUpdatePending = false;
     });
@@ -406,13 +432,12 @@ function saveCodeToStorage() {
     }
 }
 
-// Improved Live Preview Renderer with robust error catching & prevention for Null Element addEventListener & SyntaxError '<'
+// Improved Live Preview Renderer
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
     const js = jsCode.value;
     
-    // Check if JS contains accidental HTML tags causing Unexpected token '<'
     if (js.trim().match(/<[a-z][\s\S]*>/i)) {
         addErrorLog('error', 'JS Syntax Warning', 'HTML tags detected in JavaScript editor. This causes "Unexpected token <". Please move HTML code to the HTML tab.');
     }
@@ -476,7 +501,7 @@ function renderPreview() {
         </html>
     `;
     
-    liveOutput.srcdoc = fullDoc;
+    if (liveOutput) liveOutput.srcdoc = fullDoc;
 }
 
 function getContentHash() {
@@ -498,30 +523,36 @@ function syncAndRefresh(force = false) {
 
 let syncTimeout;
 [htmlCode, cssCode, jsCode].forEach(textarea => {
-    textarea.addEventListener('input', () => {
-        updateEditorStatus();
-        updateFloatingIcon();
-        
-        clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(() => {
-            syncAndRefresh(false);
-        }, 1000);
-    }, { passive: true });
+    if (textarea) {
+        textarea.addEventListener('input', () => {
+            updateEditorStatus();
+            updateFloatingIcon();
+            
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                syncAndRefresh(false);
+            }, 1000);
+        }, { passive: true });
+    }
 });
 
 // View Switcher Handlers
-btnCode.addEventListener('click', () => {
-    btnCode.classList.add('active'); 
-    btnPreview.classList.remove('active');
-    mainArea.classList.remove('show-preview');
-});
+if (btnCode) {
+    btnCode.addEventListener('click', () => {
+        btnCode.classList.add('active'); 
+        btnPreview.classList.remove('active');
+        mainArea.classList.remove('show-preview');
+    });
+}
 
-btnPreview.addEventListener('click', () => {
-    btnPreview.classList.add('active'); 
-    btnCode.classList.remove('active');
-    mainArea.classList.add('show-preview');
-    syncAndRefresh(true); 
-});
+if (btnPreview) {
+    btnPreview.addEventListener('click', () => {
+        btnPreview.classList.add('active'); 
+        btnCode.classList.remove('active');
+        mainArea.classList.add('show-preview');
+        syncAndRefresh(true); 
+    });
+}
 
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -587,18 +618,20 @@ async function openFile() {
     }
 }
 
-btnOpenFile.addEventListener('click', openFile);
+if (btnOpenFile) btnOpenFile.addEventListener('click', openFile);
 
-fileInput.addEventListener('change', (e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
-        reader.readAsText(file);
+if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
+            reader.readAsText(file);
+        });
+        fileInput.value = '';
     });
-    fileInput.value = '';
-});
+}
 
 // Save Active File Feature
 async function saveActiveFile() {
@@ -630,71 +663,94 @@ async function saveActiveFile() {
     executeDownload(content, defaultName, mimeType);
 }
 
-btnSaveFile.addEventListener('click', saveActiveFile);
+if (btnSaveFile) btnSaveFile.addEventListener('click', saveActiveFile);
 
 function copyActiveCode() {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value.trim() !== '') {
-        navigator.clipboard.writeText(activeArea.value).then(() => {
-            showToast('කේතය සාර්ථකව Copy විය!');
-        }).catch(() => {
-            activeArea.select();
-            document.execCommand('copy');
-            showToast('කේතය Copy විය!');
-        });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(activeArea.value).then(() => {
+                showToast('කේතය සාර්ථකව Copy විය!');
+            }).catch(() => {
+                fallbackCopyText(activeArea);
+            });
+        } else {
+            fallbackCopyText(activeArea);
+        }
     }
 }
 
-// Floating Copy / Paste Button Action Handler
-btnFloatingCopy.addEventListener('click', async () => {
-    if (btnFloatingCopy.getAttribute('data-action') === 'paste') {
-        try {
-            const text = await navigator.clipboard.readText();
-            const activeArea = getActiveTextarea();
-            if (activeArea) {
-                activeArea.value = text;
-                updateFloatingIcon();
-                updateEditorStatus();
-                syncAndRefresh(true);
-                showToast('කේතය Paste කරන ලදී!');
-            }
-        } catch (err) {
-            showToast('Paste කිරීමට නොහැක! Clipboard access ලබා දෙන්න.');
-        }
-    } else {
-        copyActiveCode();
-    }
-});
+function fallbackCopyText(textarea) {
+    textarea.select();
+    document.execCommand('copy');
+    showToast('කේතය Copy විය!');
+}
 
-btnFloatingDelete.addEventListener('click', () => {
-    const activeArea = getActiveTextarea();
-    const type = getActiveType();
-    if (activeArea) {
-        CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
-            activeArea.value = '';
-            syncAndRefresh(true);
-            updateEditorStatus();
-            updateFloatingIcon();
-            showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
-        });
-    }
-});
+// Floating Copy / Paste Button Action Handler with Offline Clipboard Fallback
+if (btnFloatingCopy) {
+    btnFloatingCopy.addEventListener('click', async () => {
+        if (btnFloatingCopy.getAttribute('data-action') === 'paste') {
+            try {
+                let text = '';
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    text = await navigator.clipboard.readText();
+                } else {
+                    throw new Error('Clipboard API Unreachable');
+                }
+                const activeArea = getActiveTextarea();
+                if (activeArea) {
+                    activeArea.value = text;
+                    updateFloatingIcon();
+                    updateEditorStatus();
+                    syncAndRefresh(true);
+                    showToast('කේතය Paste කරන ලදී!');
+                }
+            } catch (err) {
+                showToast('කේතය Paste කිරීමට Textarea මත Long Press / Ctrl+V කරන්න.');
+            }
+        } else {
+            copyActiveCode();
+        }
+    });
+}
+
+if (btnFloatingDelete) {
+    btnFloatingDelete.addEventListener('click', () => {
+        const activeArea = getActiveTextarea();
+        const type = getActiveType();
+        if (activeArea) {
+            CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
+                activeArea.value = '';
+                syncAndRefresh(true);
+                updateEditorStatus();
+                updateFloatingIcon();
+                showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
+            });
+        }
+    });
+}
 
 // Download Options Handlers
-modalBtnDownload.addEventListener('click', () => {
-    settingsModal.classList.remove('show');
-    downloadModal.classList.add('show');
-});
+if (modalBtnDownload) {
+    modalBtnDownload.addEventListener('click', () => {
+        settingsModal.classList.remove('show');
+        downloadModal.classList.add('show');
+    });
+}
 
-modalBtnFullscreen.addEventListener('click', () => {
-    toggleFullscreen();
-    settingsModal.classList.remove('show');
-});
+if (modalBtnFullscreen) {
+    modalBtnFullscreen.addEventListener('click', () => {
+        toggleFullscreen();
+        settingsModal.classList.remove('show');
+    });
+}
 
-closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
-downloadModal.addEventListener('click', (e) => {
-    if (e.target === downloadModal) downloadModal.classList.remove('show');
-});
+if (closeDownloadModal) closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
+if (downloadModal) {
+    downloadModal.addEventListener('click', (e) => {
+        if (e.target === downloadModal) downloadModal.classList.remove('show');
+    });
+}
 
 function executeDownload(content, fileName, mimeType) {
     const blob = new Blob([content], { type: mimeType });
@@ -708,36 +764,41 @@ function executeDownload(content, fileName, mimeType) {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-document.getElementById('dl-all').addEventListener('click', () => {
-    let downloadedCount = 0;
-    let baseDelay = 100;
-    
-    if (htmlCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), baseDelay);
-        baseDelay += 800;
-        downloadedCount++;
-    }
-    if (cssCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), baseDelay);
-        baseDelay += 800;
-        downloadedCount++;
-    }
-    if (jsCode.value.trim() !== '') {
-        setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), baseDelay);
-        downloadedCount++;
-    }
+const dlAllBtn = document.getElementById('dl-all');
+if (dlAllBtn) {
+    dlAllBtn.addEventListener('click', () => {
+        let downloadedCount = 0;
+        let baseDelay = 100;
+        
+        if (htmlCode.value.trim() !== '') {
+            setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), baseDelay);
+            baseDelay += 800;
+            downloadedCount++;
+        }
+        if (cssCode.value.trim() !== '') {
+            setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), baseDelay);
+            baseDelay += 800;
+            downloadedCount++;
+        }
+        if (jsCode.value.trim() !== '') {
+            setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), baseDelay);
+            downloadedCount++;
+        }
 
-    downloadModal.classList.remove('show');
-    if (downloadedCount > 0) {
-        showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
-    } else {
-        showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
-    }
-});
+        downloadModal.classList.remove('show');
+        if (downloadedCount > 0) {
+            showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
+        } else {
+            showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
+        }
+    });
+}
 
-document.getElementById('dl-bundle').addEventListener('click', () => {
-    const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
-    const bundledContent = `<!DOCTYPE html>
+const dlBundleBtn = document.getElementById('dl-bundle');
+if (dlBundleBtn) {
+    dlBundleBtn.addEventListener('click', () => {
+        const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
+        const bundledContent = `<!DOCTYPE html>
 <html lang="si">
 <head>
     <meta charset="UTF-8">
@@ -754,28 +815,38 @@ ${safeJsForExport}
     <\/script>
 </body>
 </html>`;
-    executeDownload(bundledContent, 'index.html', 'text/html');
-    downloadModal.classList.remove('show');
-    showToast('index.html Download වන ලදී!');
-});
+        executeDownload(bundledContent, 'index.html', 'text/html');
+        downloadModal.classList.remove('show');
+        showToast('index.html Download වන ලදී!');
+    });
+}
 
-document.getElementById('dl-html').addEventListener('click', () => {
-    executeDownload(htmlCode.value, 'index.html', 'text/html');
-    downloadModal.classList.remove('show');
-    showToast('index.html Download වන ලදී!');
-});
+const dlHtmlBtn = document.getElementById('dl-html');
+if (dlHtmlBtn) {
+    dlHtmlBtn.addEventListener('click', () => {
+        executeDownload(htmlCode.value, 'index.html', 'text/html');
+        downloadModal.classList.remove('show');
+        showToast('index.html Download වන ලදී!');
+    });
+}
 
-document.getElementById('dl-css').addEventListener('click', () => {
-    executeDownload(cssCode.value, 'style.css', 'text/css');
-    downloadModal.classList.remove('show');
-    showToast('style.css Download වන ලදී!');
-});
+const dlCssBtn = document.getElementById('dl-css');
+if (dlCssBtn) {
+    dlCssBtn.addEventListener('click', () => {
+        executeDownload(cssCode.value, 'style.css', 'text/css');
+        downloadModal.classList.remove('show');
+        showToast('style.css Download වන ලදී!');
+    });
+}
 
-document.getElementById('dl-js').addEventListener('click', () => {
-    executeDownload(jsCode.value, 'script.js', 'text/javascript');
-    downloadModal.classList.remove('show');
-    showToast('script.js Download වන ලදී!');
-});
+const dlJsBtn = document.getElementById('dl-js');
+if (dlJsBtn) {
+    dlJsBtn.addEventListener('click', () => {
+        executeDownload(jsCode.value, 'script.js', 'text/javascript');
+        downloadModal.classList.remove('show');
+        showToast('script.js Download වන ලදී!');
+    });
+}
 
 // Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
@@ -824,7 +895,7 @@ h1 { color: #f38ba8; margin-bottom: 10px; font-size: 24px; }
 p { color: #94a3b8; font-size: 14px; }
 button {
   background: #89b4fa;
-  color: #11111b; /* Fixed bug */
+  color: #11111b;
   border: none;
   padding: 12px 24px;
   font-size: 14px;
