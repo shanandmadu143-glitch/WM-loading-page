@@ -1,15 +1,14 @@
-// Service Worker Registration for Offline Capabilities
+// Register Service Worker for 100% Offline App Support
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker Registered Successfully for Offline mode'))
-            .catch(err => console.warn('Service Worker Registration Failed:', err));
+        navigator.serviceWorker.register('sw.js').catch(() => {});
     });
 }
 
-// Global App & Error Logger System
+// Global Variables & State Tracker
 let errorLogs = [];
 let lastRenderedHash = '';
+let currentFloatingState = '';
 
 // Cached DOM Elements
 const splashScreen = document.getElementById('splash-screen');
@@ -38,7 +37,7 @@ const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
 const syncDot = document.querySelector('.sync-dot');
 
-// Settings & Error Modal Action Elements
+// Modal Elements
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
 const modalBtnErrors = document.getElementById('modal-btn-errors');
@@ -64,26 +63,26 @@ const btnExportErrors = document.getElementById('btn-export-errors');
 const toast = document.getElementById('toast-notification');
 const toastText = document.getElementById('toast-text');
 
-// Active File Handles Store for Native System Access
+// Active Native File Handles
 const fileHandles = { html: null, css: null, js: null };
 
-// Virtual File Management
+// Virtual File Store
 const virtualFiles = {
     html: { name: 'index.html', mime: 'text/html' },
     css: { name: 'style.css', mime: 'text/css' },
     js: { name: 'script.js', mime: 'text/javascript' }
 };
 
-// Toast Notification System
+// Toast Notification Handler
 let toastTimeout;
 function showToast(text) {
     toastText.innerText = text;
     toast.classList.add('show');
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2200);
+    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
 }
 
-// Active Tab Helper ('html', 'css', 'js')
+// Active Tab Helpers
 function getActiveType() {
     const activeBtn = document.querySelector('.tab-btn.active');
     if (!activeBtn) return 'html';
@@ -95,10 +94,16 @@ function getActiveType() {
 
 function getActiveTextarea() { return document.querySelector('.code-area.active'); }
 
-// Dynamic Copy/Paste Icon Update Logic
+// Dynamic Floating Copy/Paste Icon Logic (State Cached to prevent Lag)
 function updateFloatingIcon() {
     const activeArea = getActiveTextarea();
-    if (activeArea && activeArea.value.trim() === '') {
+    const isEmtpy = activeArea && activeArea.value.trim() === '';
+    const newState = isEmtpy ? 'paste' : 'copy';
+
+    if (currentFloatingState === newState) return;
+    currentFloatingState = newState;
+
+    if (newState === 'paste') {
         btnFloatingCopy.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>';
         btnFloatingCopy.title = "කේතය Paste කරන්න (Paste)";
         btnFloatingCopy.setAttribute('data-action', 'paste');
@@ -109,7 +114,7 @@ function updateFloatingIcon() {
     }
 }
 
-// Advanced Error Logging & Tracker Management
+// Error Logger Tracker
 function addErrorLog(type, title, message) {
     const time = new Date().toLocaleTimeString();
     if (errorLogs.length > 0 && errorLogs[0].title === title && errorLogs[0].message === message) return;
@@ -126,13 +131,6 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     addErrorLog('error', 'Unhandled Promise Rejection', e.reason ? (e.reason.message || String(e.reason)) : 'Promise Error');
 });
-
-const originalConsoleError = console.error;
-console.error = function(...args) {
-    originalConsoleError.apply(console, args);
-    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-    addErrorLog('error', 'Console Error Log', msg);
-};
 
 function updateErrorUI() {
     const errCount = errorLogs.filter(e => e.type === 'error').length;
@@ -165,13 +163,11 @@ function updateErrorUI() {
     `).join('');
 }
 
-if (btnClearErrors) {
-    btnClearErrors.addEventListener('click', () => {
-        errorLogs = [];
-        updateErrorUI();
-        showToast('Error Log එක ရှင်း කරන ලදී');
-    });
-}
+btnClearErrors.addEventListener('click', () => {
+    errorLogs = [];
+    updateErrorUI();
+    showToast('Error Log එක ရှင်း කරන ලදී');
+});
 
 if (btnExportErrors) {
     btnExportErrors.addEventListener('click', () => {
@@ -185,19 +181,15 @@ if (btnExportErrors) {
     });
 }
 
-if (modalBtnErrors) {
-    modalBtnErrors.addEventListener('click', () => {
-        settingsModal.classList.remove('show');
-        errorModal.classList.add('show');
-    });
-}
+modalBtnErrors.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    errorModal.classList.add('show');
+});
 
-if (closeErrorModal) closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
-if (errorModal) {
-    errorModal.addEventListener('click', (e) => {
-        if (e.target === errorModal) errorModal.classList.remove('show');
-    });
-}
+closeErrorModal.addEventListener('click', () => errorModal.classList.remove('show'));
+errorModal.addEventListener('click', (e) => {
+    if (e.target === errorModal) errorModal.classList.remove('show');
+});
 
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'custom_error_log') {
@@ -205,58 +197,34 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// Splash Screen Manager
+// Fast Splash Screen Manager
 let splashProgress = 0;
 let splashHidden = false;
-const totalDuration = 1200;
-const intervalTime = 20;
-const increment = 100 / (totalDuration / intervalTime);
-
-const statusMessages = [
-    { pct: 0, text: "System Initializing..." },
-    { pct: 20, text: "Compiler Engine සූදානම් කරමින්..." },
-    { pct: 45, text: "UI Themes & Editors සක්‍රිය කරමින්..." },
-    { pct: 70, text: "Live Sandbox Environment සකසමින්..." },
-    { pct: 90, text: "සියලු පද්ධති සූදානම්..." },
-    { pct: 100, text: "සාදරයෙන් පිළිගනිමු!" }
-];
 
 function hideSplashScreen() {
     if (splashHidden) return;
     splashHidden = true;
-    if (splashInterval) clearInterval(splashInterval);
-    if (splashScreen) {
-        splashScreen.classList.add('hide');
-        setTimeout(() => { splashScreen.style.display = 'none'; }, 350);
-    }
+    splashScreen.classList.add('hide');
+    setTimeout(() => { splashScreen.style.display = 'none'; }, 300);
 }
 
 const splashInterval = setInterval(() => {
-    splashProgress += increment;
+    splashProgress += 10;
     if (splashProgress >= 100) {
         splashProgress = 100;
         clearInterval(splashInterval);
-        setTimeout(hideSplashScreen, 150);
+        setTimeout(hideSplashScreen, 100);
     }
 
-    const currentPct = Math.floor(splashProgress);
-    if (progressFill) progressFill.style.width = currentPct + '%';
-    if (splashPercent) splashPercent.innerText = currentPct + '%';
+    progressFill.style.width = splashProgress + '%';
+    splashPercent.innerText = splashProgress + '%';
+    if (splashProgress > 60) splashStatus.innerText = "සියලු පද්ධති සූදානම්...";
+}, 30);
 
-    for (let i = statusMessages.length - 1; i >= 0; i--) {
-        if (currentPct >= statusMessages[i].pct) {
-            if (splashStatus) splashStatus.innerText = statusMessages[i].text;
-            break;
-        }
-    }
-}, intervalTime);
-
-if (skipSplashBtn) {
-    skipSplashBtn.addEventListener('click', () => {
-        clearInterval(splashInterval);
-        hideSplashScreen();
-    });
-}
+skipSplashBtn.addEventListener('click', () => {
+    clearInterval(splashInterval);
+    hideSplashScreen();
+});
 
 // Fullscreen Handler
 function toggleFullscreen() {
@@ -277,7 +245,7 @@ function toggleFullscreen() {
     }
 }
 
-// Custom Confirm UI Modal
+// Custom UI Dialog Manager
 const CustomUI = {
     show: function(type, message, onConfirm) {
         modalMessage.innerText = message;
@@ -310,13 +278,11 @@ const CustomUI = {
     }
 };
 
-if (modal) {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) CustomUI.close();
-    });
-}
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) CustomUI.close();
+});
 
-// Theme Management System
+// Theme Selector Manager
 function applyTheme(theme) {
     if (theme === 'default') {
         document.body.removeAttribute('data-theme');
@@ -334,18 +300,14 @@ function applyTheme(theme) {
     });
 }
 
-if (btnSettings) btnSettings.addEventListener('click', () => settingsModal.classList.add('show'));
-if (closeSettingsModal) closeSettingsModal.addEventListener('click', () => settingsModal.classList.remove('show'));
-if (settingsModal) {
-    settingsModal.addEventListener('click', (e) => {
-        if (e.target === settingsModal) settingsModal.classList.remove('show');
-    });
-}
+btnSettings.addEventListener('click', () => settingsModal.classList.add('show'));
+closeSettingsModal.addEventListener('click', () => settingsModal.classList.remove('show'));
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) settingsModal.classList.remove('show');
+});
 
 themeCards.forEach(card => {
-    card.addEventListener('click', () => {
-        applyTheme(card.getAttribute('data-theme'));
-    });
+    card.addEventListener('click', () => applyTheme(card.getAttribute('data-theme')));
 });
 
 function applyFontSize(size) {
@@ -354,9 +316,7 @@ function applyFontSize(size) {
     if (fontSizeSelect) fontSizeSelect.value = size;
 }
 
-if (fontSizeSelect) {
-    fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
-}
+fontSizeSelect.addEventListener('change', (e) => applyFontSize(e.target.value));
 
 applyTheme(localStorage.getItem('htmlCodesTheme') || 'default');
 applyFontSize(localStorage.getItem('htmlCodesFontSize') || '14');
@@ -371,12 +331,13 @@ function updateEditorStatus() {
         if (activeArea) {
             const text = activeArea.value;
             const lines = text ? text.split('\n').length : 1;
-            if (editorStatus) editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
+            editorStatus.innerText = `Lines: ${lines} | Chars: ${text.length}`;
         }
         statusUpdatePending = false;
     });
 }
 
+// Fast Tab Indentation Handler
 codeAreas.forEach(area => {
     area.addEventListener('keydown', function(e) {
         if (e.key === 'Tab') {
@@ -391,37 +352,19 @@ codeAreas.forEach(area => {
                         this.value = this.value.substring(0, lineStart) + this.value.substring(lineStart + 2);
                         this.selectionStart = this.selectionEnd = Math.max(lineStart, start - 2);
                     }
-                } else {
-                    const selectedText = this.value.substring(start, end);
-                    const lines = selectedText.split('\n');
-                    const unindentedLines = lines.map(line => line.startsWith('  ') ? line.substring(2) : (line.startsWith(' ') ? line.substring(1) : line));
-                    const unindentedText = unindentedLines.join('\n');
-                    this.value = this.value.substring(0, start) + unindentedText + this.value.substring(end);
-                    this.selectionStart = start;
-                    this.selectionEnd = start + unindentedText.length;
                 }
             } else {
                 if (start === end) {
                     this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
                     this.selectionStart = this.selectionEnd = start + 2;
-                } else {
-                    const selectedText = this.value.substring(start, end);
-                    const lines = selectedText.split('\n');
-                    const indentedText = lines.map(line => '  ' + line).join('\n');
-                    this.value = this.value.substring(0, start) + indentedText + this.value.substring(end);
-                    this.selectionStart = start;
-                    this.selectionEnd = start + indentedText.length;
                 }
             }
-            updateEditorStatus();
-            updateFloatingIcon();
-            
-            clearTimeout(syncTimeout);
-            syncTimeout = setTimeout(() => { syncAndRefresh(false); }, 1000);
+            triggerAutoSaveAndRefresh();
         }
     }, { passive: false });
 });
 
+// Optimized Offline LocalStorage Saving
 function saveCodeToStorage() {
     try {
         localStorage.setItem('savedHTML', htmlCode.value);
@@ -432,15 +375,11 @@ function saveCodeToStorage() {
     }
 }
 
-// Improved Live Preview Renderer
+// Safe Live Preview Renderer
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
     const js = jsCode.value;
-    
-    if (js.trim().match(/<[a-z][\s\S]*>/i)) {
-        addErrorLog('error', 'JS Syntax Warning', 'HTML tags detected in JavaScript editor. This causes "Unexpected token <". Please move HTML code to the HTML tab.');
-    }
 
     const safeJS = js.replace(/<\/script>/gi, '<\\/script>');
     const safeCSS = css.replace(/<\/style>/gi, '<\\/style>');
@@ -448,30 +387,13 @@ function renderPreview() {
     const bridgeScript = `
         <script>
             window.onerror = function(msg, url, line, col, err) {
-                let banner = document.getElementById('preview-error-banner');
-                if (!banner) {
-                    banner = document.createElement('div');
-                    banner.id = 'preview-error-banner';
-                    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f38ba8;color:#11111b;padding:8px 12px;font-family:sans-serif;font-size:12px;z-index:999999;box-shadow:0 2px 10px rgba(0,0,0,0.3);display:flex;justify-content:space-between;align-items:center;';
-                    document.body.insertBefore(banner, document.body.firstChild);
-                }
-                banner.innerHTML = '<span>⚠️ <strong>Runtime Error:</strong> ' + msg + '</span><button onclick="this.parentElement.remove()" style="background:#11111b;color:#f38ba8;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;">✕</button>';
-
                 window.parent.postMessage({ 
                     type: 'custom_error_log', 
                     title: 'Live Preview Execution Error', 
-                    message: msg + (line ? ' (Line ' + line + (col ? ', Col ' + col : '') + ')' : '') 
+                    message: msg + (line ? ' (Line ' + line + ')' : '') 
                 }, '*');
                 return true;
             };
-            window.addEventListener('unhandledrejection', function(event) {
-                let errMsg = event.reason ? (event.reason.message || String(event.reason)) : 'Unhandled Promise Rejection';
-                window.parent.postMessage({ 
-                    type: 'custom_error_log', 
-                    title: 'Live Preview Promise Error', 
-                    message: errMsg 
-                }, '*');
-            });
         <\/script>
     `;
 
@@ -492,7 +414,7 @@ function renderPreview() {
                 } catch(err) {
                     window.parent.postMessage({ 
                         type: 'custom_error_log', 
-                        title: 'Live Preview Execution Error', 
+                        title: 'Live Preview Syntax Error', 
                         message: err.message 
                     }, '*');
                 }
@@ -501,7 +423,7 @@ function renderPreview() {
         </html>
     `;
     
-    if (liveOutput) liveOutput.srcdoc = fullDoc;
+    liveOutput.srcdoc = fullDoc;
 }
 
 function getContentHash() {
@@ -517,42 +439,46 @@ function syncAndRefresh(force = false) {
         lastRenderedHash = currentHash;
         setTimeout(() => {
             if (syncDot) syncDot.classList.remove('syncing');
-        }, 400);
+        }, 300);
     }
 }
 
-let syncTimeout;
+// Lag-Free Separated Debouncers
+let saveTimeout;
+let previewTimeout;
+
+function triggerAutoSaveAndRefresh() {
+    updateEditorStatus();
+    updateFloatingIcon();
+    
+    // Quick Save to LocalStorage (200ms)
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveCodeToStorage, 200);
+
+    // Smooth Preview Refresh (350ms)
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(() => {
+        syncAndRefresh(false);
+    }, 350);
+}
+
 [htmlCode, cssCode, jsCode].forEach(textarea => {
-    if (textarea) {
-        textarea.addEventListener('input', () => {
-            updateEditorStatus();
-            updateFloatingIcon();
-            
-            clearTimeout(syncTimeout);
-            syncTimeout = setTimeout(() => {
-                syncAndRefresh(false);
-            }, 1000);
-        }, { passive: true });
-    }
+    textarea.addEventListener('input', triggerAutoSaveAndRefresh, { passive: true });
 });
 
-// View Switcher Handlers
-if (btnCode) {
-    btnCode.addEventListener('click', () => {
-        btnCode.classList.add('active'); 
-        btnPreview.classList.remove('active');
-        mainArea.classList.remove('show-preview');
-    });
-}
+// View Switchers
+btnCode.addEventListener('click', () => {
+    btnCode.classList.add('active'); 
+    btnPreview.classList.remove('active');
+    mainArea.classList.remove('show-preview');
+});
 
-if (btnPreview) {
-    btnPreview.addEventListener('click', () => {
-        btnPreview.classList.add('active'); 
-        btnCode.classList.remove('active');
-        mainArea.classList.add('show-preview');
-        syncAndRefresh(true); 
-    });
-}
+btnPreview.addEventListener('click', () => {
+    btnPreview.classList.add('active'); 
+    btnCode.classList.remove('active');
+    mainArea.classList.add('show-preview');
+    syncAndRefresh(true); 
+});
 
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -565,14 +491,13 @@ tabBtns.forEach(btn => {
     });
 });
 
-// File Processor for Open File Feature
+// File Processor
 function processOpenedFile(name, content, handle = null) {
     const ext = name.split('.').pop().toLowerCase();
     let targetType = 'html';
     
     if (ext === 'css') targetType = 'css';
     else if (ext === 'js') targetType = 'js';
-    else targetType = 'html';
 
     const targetTabBtn = document.querySelector(`.tab-btn[data-target="${targetType}-code"]`);
     if (targetTabBtn) targetTabBtn.click();
@@ -618,22 +543,20 @@ async function openFile() {
     }
 }
 
-if (btnOpenFile) btnOpenFile.addEventListener('click', openFile);
+btnOpenFile.addEventListener('click', openFile);
 
-if (fileInput) {
-    fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
-            reader.readAsText(file);
-        });
-        fileInput.value = '';
+fileInput.addEventListener('change', (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => processOpenedFile(file.name, event.target.result, null);
+        reader.readAsText(file);
     });
-}
+    fileInput.value = '';
+});
 
-// Save Active File Feature
+// File Save Manager
 async function saveActiveFile() {
     const type = getActiveType();
     const activeArea = document.getElementById(`${type}-code`);
@@ -663,94 +586,71 @@ async function saveActiveFile() {
     executeDownload(content, defaultName, mimeType);
 }
 
-if (btnSaveFile) btnSaveFile.addEventListener('click', saveActiveFile);
+btnSaveFile.addEventListener('click', saveActiveFile);
 
 function copyActiveCode() {
     const activeArea = getActiveTextarea();
     if (activeArea && activeArea.value.trim() !== '') {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(activeArea.value).then(() => {
-                showToast('කේතය සාර්ථකව Copy විය!');
-            }).catch(() => {
-                fallbackCopyText(activeArea);
-            });
-        } else {
-            fallbackCopyText(activeArea);
-        }
+        navigator.clipboard.writeText(activeArea.value).then(() => {
+            showToast('කේතය සාර්ථකව Copy විය!');
+        }).catch(() => {
+            activeArea.select();
+            document.execCommand('copy');
+            showToast('කේතය Copy විය!');
+        });
     }
 }
 
-function fallbackCopyText(textarea) {
-    textarea.select();
-    document.execCommand('copy');
-    showToast('කේතය Copy විය!');
-}
-
-// Floating Copy / Paste Button Action Handler with Offline Clipboard Fallback
-if (btnFloatingCopy) {
-    btnFloatingCopy.addEventListener('click', async () => {
-        if (btnFloatingCopy.getAttribute('data-action') === 'paste') {
-            try {
-                let text = '';
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    text = await navigator.clipboard.readText();
-                } else {
-                    throw new Error('Clipboard API Unreachable');
-                }
-                const activeArea = getActiveTextarea();
-                if (activeArea) {
-                    activeArea.value = text;
-                    updateFloatingIcon();
-                    updateEditorStatus();
-                    syncAndRefresh(true);
-                    showToast('කේතය Paste කරන ලදී!');
-                }
-            } catch (err) {
-                showToast('කේතය Paste කිරීමට Textarea මත Long Press / Ctrl+V කරන්න.');
-            }
-        } else {
-            copyActiveCode();
-        }
-    });
-}
-
-if (btnFloatingDelete) {
-    btnFloatingDelete.addEventListener('click', () => {
-        const activeArea = getActiveTextarea();
-        const type = getActiveType();
-        if (activeArea) {
-            CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
-                activeArea.value = '';
-                syncAndRefresh(true);
-                updateEditorStatus();
+// Floating Copy / Paste Button Action Handler
+btnFloatingCopy.addEventListener('click', async () => {
+    if (btnFloatingCopy.getAttribute('data-action') === 'paste') {
+        try {
+            const text = await navigator.clipboard.readText();
+            const activeArea = getActiveTextarea();
+            if (activeArea) {
+                activeArea.value = text;
                 updateFloatingIcon();
-                showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
-            });
+                updateEditorStatus();
+                syncAndRefresh(true);
+                showToast('කේතය Paste කරන ලදී!');
+            }
+        } catch (err) {
+            showToast('Paste කිරීමට කේතය ලියන්න හෝ Clipboard Access ලබා දෙන්න');
         }
-    });
-}
+    } else {
+        copyActiveCode();
+    }
+});
+
+btnFloatingDelete.addEventListener('click', () => {
+    const activeArea = getActiveTextarea();
+    const type = getActiveType();
+    if (activeArea) {
+        CustomUI.show('confirm', `ඔබට මෙම ${type.toUpperCase()} කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද?`, () => {
+            activeArea.value = '';
+            syncAndRefresh(true);
+            updateEditorStatus();
+            updateFloatingIcon();
+            showToast(`${type.toUpperCase()} කේතය සාර්ථකව මකා දමන ලදී`);
+        });
+    }
+});
 
 // Download Options Handlers
-if (modalBtnDownload) {
-    modalBtnDownload.addEventListener('click', () => {
-        settingsModal.classList.remove('show');
-        downloadModal.classList.add('show');
-    });
-}
+modalBtnDownload.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    downloadModal.classList.add('show');
+});
 
-if (modalBtnFullscreen) {
-    modalBtnFullscreen.addEventListener('click', () => {
-        toggleFullscreen();
-        settingsModal.classList.remove('show');
-    });
-}
+modalBtnFullscreen.addEventListener('click', () => {
+    toggleFullscreen();
+    settingsModal.classList.remove('show');
+});
 
-if (closeDownloadModal) closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
-if (downloadModal) {
-    downloadModal.addEventListener('click', (e) => {
-        if (e.target === downloadModal) downloadModal.classList.remove('show');
-    });
-}
+closeDownloadModal.addEventListener('click', () => downloadModal.classList.remove('show'));
+downloadModal.addEventListener('click', (e) => {
+    if (e.target === downloadModal) downloadModal.classList.remove('show');
+});
 
 function executeDownload(content, fileName, mimeType) {
     const blob = new Blob([content], { type: mimeType });
@@ -761,44 +661,22 @@ function executeDownload(content, fileName, mimeType) {
     document.body.appendChild(a); 
     a.click(); 
     document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-const dlAllBtn = document.getElementById('dl-all');
-if (dlAllBtn) {
-    dlAllBtn.addEventListener('click', () => {
-        let downloadedCount = 0;
-        let baseDelay = 100;
-        
-        if (htmlCode.value.trim() !== '') {
-            setTimeout(() => executeDownload(htmlCode.value, 'index.html', 'text/html'), baseDelay);
-            baseDelay += 800;
-            downloadedCount++;
-        }
-        if (cssCode.value.trim() !== '') {
-            setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), baseDelay);
-            baseDelay += 800;
-            downloadedCount++;
-        }
-        if (jsCode.value.trim() !== '') {
-            setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), baseDelay);
-            downloadedCount++;
-        }
+document.getElementById('dl-all').addEventListener('click', () => {
+    let count = 0;
+    if (htmlCode.value.trim() !== '') { executeDownload(htmlCode.value, 'index.html', 'text/html'); count++; }
+    if (cssCode.value.trim() !== '') { setTimeout(() => executeDownload(cssCode.value, 'style.css', 'text/css'), 200); count++; }
+    if (jsCode.value.trim() !== '') { setTimeout(() => executeDownload(jsCode.value, 'script.js', 'text/javascript'), 400); count++; }
 
-        downloadModal.classList.remove('show');
-        if (downloadedCount > 0) {
-            showToast(`දත්ත සහිත Files ${downloadedCount} ම Download වන ලදී!`);
-        } else {
-            showToast('Download කිරීමට කේත ඇතුළත් කර නොමැත!');
-        }
-    });
-}
+    downloadModal.classList.remove('show');
+    if (count > 0) showToast(`Files ${count} ම Download විය!`);
+});
 
-const dlBundleBtn = document.getElementById('dl-bundle');
-if (dlBundleBtn) {
-    dlBundleBtn.addEventListener('click', () => {
-        const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
-        const bundledContent = `<!DOCTYPE html>
+document.getElementById('dl-bundle').addEventListener('click', () => {
+    const safeJsForExport = jsCode.value.replace(/<\/script>/gi, '<\\/script>');
+    const bundledContent = `<!DOCTYPE html>
 <html lang="si">
 <head>
     <meta charset="UTF-8">
@@ -815,38 +693,28 @@ ${safeJsForExport}
     <\/script>
 </body>
 </html>`;
-        executeDownload(bundledContent, 'index.html', 'text/html');
-        downloadModal.classList.remove('show');
-        showToast('index.html Download වන ලදී!');
-    });
-}
+    executeDownload(bundledContent, 'index.html', 'text/html');
+    downloadModal.classList.remove('show');
+    showToast('index.html Download වන ලදී!');
+});
 
-const dlHtmlBtn = document.getElementById('dl-html');
-if (dlHtmlBtn) {
-    dlHtmlBtn.addEventListener('click', () => {
-        executeDownload(htmlCode.value, 'index.html', 'text/html');
-        downloadModal.classList.remove('show');
-        showToast('index.html Download වන ලදී!');
-    });
-}
+document.getElementById('dl-html').addEventListener('click', () => {
+    executeDownload(htmlCode.value, 'index.html', 'text/html');
+    downloadModal.classList.remove('show');
+    showToast('index.html Download වන ලදී!');
+});
 
-const dlCssBtn = document.getElementById('dl-css');
-if (dlCssBtn) {
-    dlCssBtn.addEventListener('click', () => {
-        executeDownload(cssCode.value, 'style.css', 'text/css');
-        downloadModal.classList.remove('show');
-        showToast('style.css Download වන ලදී!');
-    });
-}
+document.getElementById('dl-css').addEventListener('click', () => {
+    executeDownload(cssCode.value, 'style.css', 'text/css');
+    downloadModal.classList.remove('show');
+    showToast('style.css Download වන ලදී!');
+});
 
-const dlJsBtn = document.getElementById('dl-js');
-if (dlJsBtn) {
-    dlJsBtn.addEventListener('click', () => {
-        executeDownload(jsCode.value, 'script.js', 'text/javascript');
-        downloadModal.classList.remove('show');
-        showToast('script.js Download වන ලදී!');
-    });
-}
+document.getElementById('dl-js').addEventListener('click', () => {
+    executeDownload(jsCode.value, 'script.js', 'text/javascript');
+    downloadModal.classList.remove('show');
+    showToast('script.js Download වන ලදී!');
+});
 
 // Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
@@ -861,11 +729,13 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+window.addEventListener('beforeunload', saveCodeToStorage);
+
 // App Initialization
 window.addEventListener('DOMContentLoaded', () => {
     const defaultHTML = `<div class="card">
   <h1>ආයුබෝවන්! 🇱🇰</h1>
-  <p>ඔබගේ HTML.codes Live Editor එක සාර්ථකව වැඩ කරයි.</p>
+  <p>ඔබගේ HTML.codes Live Editor එක Offline සුපිරියටම වැඩ කරයි.</p>
   <button id="hello-btn">Click Me</button>
 </div>`;
 
@@ -913,7 +783,7 @@ button:hover {
     const defaultJS = `const btn = document.getElementById('hello-btn');
 if (btn) {
   btn.addEventListener('click', function() {
-    alert('සාර්ථකයි! ඔබගේ JavaScript එක හරියටම වැඩ කරනවා 🎉');
+    alert('සාර්ථකයි! ඔබගේ JavaScript එක Offline වලදීත් වැඩ කරනවා 🎉');
   });
 }`;
 
