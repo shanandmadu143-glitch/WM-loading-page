@@ -29,6 +29,10 @@ const btnFloatingCopy = document.getElementById('btn-floating-copy');
 const btnFloatingDelete = document.getElementById('btn-floating-delete');
 const syncDot = document.querySelector('.sync-dot');
 
+// Offline Modal Action Elements
+const offlineModal = document.getElementById('offline-modal');
+const btnRetryOffline = document.getElementById('btn-retry-offline');
+
 // Settings & Error Modal Action Elements
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalBtnFullscreen = document.getElementById('modal-btn-fullscreen');
@@ -72,6 +76,54 @@ function showToast(text) {
     toast.classList.add('show');
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2200);
+}
+
+// Network Offline / Online Detection Logic
+function updateNetworkStatus() {
+    if (!navigator.onLine) {
+        showOfflineModal();
+    } else {
+        hideOfflineModal();
+    }
+}
+
+function showOfflineModal() {
+    if (offlineModal) {
+        offlineModal.classList.add('show');
+    }
+}
+
+function hideOfflineModal() {
+    if (offlineModal && offlineModal.classList.contains('show')) {
+        offlineModal.classList.remove('show');
+        showToast('Internet Connection එක සක්‍රිය විය! 🟢');
+    }
+}
+
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
+
+if (btnRetryOffline) {
+    btnRetryOffline.addEventListener('click', () => {
+        btnRetryOffline.classList.add('spin');
+        
+        // Attempt a network fetch ping to verify real connection
+        fetch('https://httpbin.org/get', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
+            .then(() => {
+                btnRetryOffline.classList.remove('spin');
+                hideOfflineModal();
+            })
+            .catch(() => {
+                setTimeout(() => {
+                    btnRetryOffline.classList.remove('spin');
+                    if (!navigator.onLine) {
+                        showToast('තවමත් Connection එක වැඩ නැත. පරීක්ෂා කරන්න!');
+                    } else {
+                        hideOfflineModal();
+                    }
+                }, 600);
+            });
+    });
 }
 
 // Active Tab Helper ('html', 'css', 'js')
@@ -406,13 +458,12 @@ function saveCodeToStorage() {
     }
 }
 
-// Improved Live Preview Renderer with robust error catching & prevention for Null Element addEventListener & SyntaxError '<'
+// Live Preview Renderer with robust error catching
 function renderPreview() {
     const html = htmlCode.value;
     const css = cssCode.value;
     const js = jsCode.value;
     
-    // Check if JS contains accidental HTML tags causing Unexpected token '<'
     if (js.trim().match(/<[a-z][\s\S]*>/i)) {
         addErrorLog('error', 'JS Syntax Warning', 'HTML tags detected in JavaScript editor. This causes "Unexpected token <". Please move HTML code to the HTML tab.');
     }
@@ -824,7 +875,7 @@ h1 { color: #f38ba8; margin-bottom: 10px; font-size: 24px; }
 p { color: #94a3b8; font-size: 14px; }
 button {
   background: #89b4fa;
-  default-color: #11111b;
+  color: #11111b;
   border: none;
   padding: 12px 24px;
   font-size: 14px;
@@ -854,4 +905,7 @@ if (btn) {
     updateEditorStatus();
     updateErrorUI();
     updateFloatingIcon();
+    
+    // Initial Network Connection Check
+    updateNetworkStatus();
 });
