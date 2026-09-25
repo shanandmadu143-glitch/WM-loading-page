@@ -2,148 +2,46 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e1e2e">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Code Editor</title>
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <title>HTML.codes - Live Web Editor</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <meta name="theme-color" content="#1e1e1e">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
 </head>
 <body>
 
-    <input type="file" id="file-input" accept=".html,.htm,.css,.js,.txt" style="display: none;" multiple>
-
-    <!-- Animated Splash Screen -->
-    <div id="splash-screen" class="splash-overlay">
-        <div class="splash-card">
-            <div class="splash-badge">V3.0 DYNAMIC OFFLINE PRO</div>
-            <h1 class="splash-title">HTML.<span>codes</span></h1>
-            <p class="splash-description">
-                ඕනෑම File එකක් සාදා සජීවීව පරීක්ෂණ කිරීමට සැකසුණු modern web editor එකකි. දැන් සම්පූර්ණයෙන්ම Offline වැඩ කරයි!
-            </p>
-            <div class="loader-box">
-                <div class="loader-status-bar">
-                    <span id="splash-status">System Initializing...</span>
-                    <span id="splash-percent">0%</span>
-                </div>
-                <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
-            </div>
-            <button id="skip-splash-btn" class="skip-btn">Editor එකට යන්න</button>
-        </div>
-    </div>
-
-    <!-- Main Application Header -->
-    <header>
+    <header class="app-header">
         <div class="logo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2.5"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            HTML.<span>codes</span>
+            <i class="fa-solid fa-code"></i> <span>Pro Editor</span>
         </div>
-        <div class="view-switcher">
-            <button id="btn-code" class="active">Code</button>
-            <button id="btn-preview">Live Preview</button>
+        <div class="actions">
+            <!-- File Select Icon -->
+            <button id="openFileBtn" class="action-btn" title="Open File">
+                <i class="fa-regular fa-folder-open"></i>
+            </button>
+            <input type="file" id="fileInput" accept=".txt,.html,.css,.js,.json" style="display: none;">
+            
+            <!-- Copy / Paste Icons -->
+            <button id="copyBtn" class="action-btn" title="Copy Text">
+                <i class="fa-regular fa-copy"></i>
+            </button>
+            <button id="pasteBtn" class="action-btn" title="Paste Text">
+                <i class="fa-regular fa-clipboard"></i>
+            </button>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main id="main-area">
-        <div id="editor-container">
-            <div class="tab-header">
-                <!-- Dynamic Tabs Container -->
-                <div class="code-tabs" id="tabs-container">
-                    <!-- Tabs will be generated here by JS -->
-                    <button class="add-tab-btn" id="btn-add-tab" title="Add New File">＋</button>
-                </div>
-                
-                <div class="action-btns">
-                    <button id="btn-save-file" class="icon-btn" title="Force Save (Auto-saves anyway)">💾</button>
-                    <button id="btn-settings" class="icon-btn" title="Settings">⚙️</button>
-                </div>
-            </div>
-            
-            <div class="editor-wrapper" id="editors-container">
-                <!-- Textareas will be generated here by JS -->
-
-                <button id="btn-floating-copy" class="floating-copy-btn" data-action="copy" title="Copy / Paste Code">📋</button>
-                <button id="btn-floating-delete" class="floating-delete-btn" title="Clear Code">🗑️</button>
-            </div>
-        </div>
-
-        <div id="preview-container">
-            <iframe id="live-output" sandbox="allow-scripts allow-modals allow-same-origin allow-forms allow-popups"></iframe>
-        </div>
+    <main class="editor-container">
+        <textarea id="editor" placeholder="ඔබගේ කේත හෝ සටහන් මෙහි ඇතුලත් කරන්න..."></textarea>
     </main>
 
-    <footer class="footer-banner">
-        <div class="author-tag">Created by <span>Yomal Lakshan</span></div>
-        <div class="sync-indicator" id="sync-indicator">
-            <span class="sync-dot"></span><span id="sync-text">Auto-Sync (Offline Ready)</span>
-        </div>
-        <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
-    </footer>
+    <!-- Network Status Notification -->
+    <div id="networkStatus" class="toast hidden"></div>
 
-    <!-- New File Modal -->
-    <div id="new-file-modal" class="modal-overlay">
-        <div class="modal-box">
-             <div class="modal-header">
-                <div class="modal-title">📄 අලුත් File එකක් සාදන්න</div>
-                <button class="modal-close-btn" id="close-new-file-modal">❌</button>
-            </div>
-            <div class="setting-group">
-                <span class="setting-label">File Name (Extensions: .js, .css ආදිය සමඟ දෙන්න)</span>
-                <input type="text" id="new-file-name" class="text-input" placeholder="උදා: script.js, style.css" autocomplete="off">
-            </div>
-            <button id="btn-create-file" class="modal-btn btn-ok" style="width:100%; margin-top:10px;">File එක හදන්න</button>
-        </div>
-    </div>
-
-    <!-- Settings Modal UI -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-box">
-             <div class="modal-header">
-                <div class="modal-title">⚙️ Editor Settings</div>
-                <button class="modal-close-btn" id="close-settings-modal">❌</button>
-            </div>
-            <div class="setting-group">
-                <span class="setting-label">IDE Theme Select</span>
-                <div class="theme-grid">
-                    <div class="theme-card active" data-theme="default">Catppuccin Dark</div>
-                    <div class="theme-card" data-theme="light">Light Theme</div>
-                </div>
-            </div>
-            <button id="modal-btn-download" class="modal-btn btn-ok" style="width:100%; margin-top:10px;">Download Codes</button>
-        </div>
-    </div>
-
-    <!-- Download Options Modal UI -->
-    <div id="download-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <div class="modal-title">📥 Download Options</div>
-                <button class="modal-close-btn" id="close-download-modal">❌</button>
-            </div>
-            <div class="download-options">
-                <div class="download-card highlight" id="dl-bundle">
-                    <div>
-                        <div class="download-card-title">Full Project Bundled (.html)</div>
-                        <div class="download-card-desc">ඔබ සෑදූ CSS/JS සියල්ල එකට එකතු කළ index.html ලෙස.</div>
-                    </div>
-                </div>
-                <div class="download-card" id="dl-current">
-                    <div class="download-card-title">Download Current File</div>
-                    <div class="download-card-desc">දැනට විවෘත කර ඇති ගොනුව පමණක් වෙනම.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast-notification" class="toast-notification">
-        <span id="toast-text">Success!</span>
-    </div>
-
+    <script src="script.js"></script>
 </body>
 </html>
