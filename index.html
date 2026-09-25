@@ -2,13 +2,11 @@
 <html lang="si">
 <head>
     <meta charset="UTF-8">
-    <!-- PWA & Mobile UX Settings -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" content="#1e1e2e">
     <link rel="manifest" href="manifest.json">
     <title>HTML.codes - Live Web Editor</title>
     
-    <!-- Fonts with Offline Fallbacks -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,37 +16,24 @@
 </head>
 <body>
 
-    <!-- Hidden File Input for Legacy Open Fallback -->
     <input type="file" id="file-input" accept=".html,.htm,.css,.js,.txt" style="display: none;" multiple>
 
     <!-- Animated Splash Screen -->
     <div id="splash-screen" class="splash-overlay">
         <div class="splash-card">
-            <div class="splash-badge">V2.1 OFFLINE READY PRO</div>
+            <div class="splash-badge">V3.0 DYNAMIC OFFLINE PRO</div>
             <h1 class="splash-title">HTML.<span>codes</span></h1>
             <p class="splash-description">
-                HTML, CSS සහ JavaScript කේත සජීවීව ලියා පරීක්ෂණ කිරීමට සහ නිර්මාණය කිරීමට සැකසුණු modern web editor එකකි. දැන් සම්පූර්ණයෙන්ම Offline වැඩ කරයි!
+                ඕනෑම File එකක් සාදා සජීවීව පරීක්ෂණ කිරීමට සැකසුණු modern web editor එකකි. දැන් සම්පූර්ණයෙන්ම Offline වැඩ කරයි!
             </p>
-            
-            <div class="splash-features">
-                <div class="feature-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#89b4fa" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Live Preview</div>
-                <div class="feature-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a6e22e" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg> 100% Offline</div>
-                <div class="feature-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f38ba8" stroke-width="2.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> Auto-Close Brackets</div>
-            </div>
-
             <div class="loader-box">
                 <div class="loader-status-bar">
                     <span id="splash-status">System Initializing...</span>
                     <span id="splash-percent">0%</span>
                 </div>
-                <div class="progress-track">
-                    <div id="progress-fill" class="progress-fill"></div>
-                </div>
+                <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
             </div>
-
-            <button id="skip-splash-btn" class="skip-btn">
-                Editor එකට යන්න
-            </button>
+            <button id="skip-splash-btn" class="skip-btn">Editor එකට යන්න</button>
         </div>
     </div>
 
@@ -68,23 +53,20 @@
     <main id="main-area">
         <div id="editor-container">
             <div class="tab-header">
-                <div class="code-tabs">
-                    <button class="tab-btn active" data-target="html-code">HTML</button>
-                    <button class="tab-btn" data-target="css-code">CSS</button>
-                    <button class="tab-btn" data-target="js-code">JS</button>
+                <!-- Dynamic Tabs Container -->
+                <div class="code-tabs" id="tabs-container">
+                    <!-- Tabs will be generated here by JS -->
+                    <button class="add-tab-btn" id="btn-add-tab" title="Add New File">＋</button>
                 </div>
                 
                 <div class="action-btns">
-                    <button id="btn-open-file" class="icon-btn" title="Open File">📂</button>
-                    <button id="btn-save-file" class="icon-btn" title="Save File (Ctrl+S)">💾</button>
+                    <button id="btn-save-file" class="icon-btn" title="Force Save (Auto-saves anyway)">💾</button>
                     <button id="btn-settings" class="icon-btn" title="Settings">⚙️</button>
                 </div>
             </div>
             
-            <div class="editor-wrapper">
-                <textarea id="html-code" class="code-area active" placeholder="<!-- මෙතන HTML කේතය ලියන්න -->" spellcheck="false"></textarea>
-                <textarea id="css-code" class="code-area" placeholder="/* මෙතන CSS කේතය ලියන්න */" spellcheck="false"></textarea>
-                <textarea id="js-code" class="code-area" placeholder="// මෙතන JavaScript කේතය ලියන්න" spellcheck="false"></textarea>
+            <div class="editor-wrapper" id="editors-container">
+                <!-- Textareas will be generated here by JS -->
 
                 <button id="btn-floating-copy" class="floating-copy-btn" data-action="copy" title="Copy / Paste Code">📋</button>
                 <button id="btn-floating-delete" class="floating-delete-btn" title="Clear Code">🗑️</button>
@@ -96,7 +78,6 @@
         </div>
     </main>
 
-    <!-- App Footer Banner -->
     <footer class="footer-banner">
         <div class="author-tag">Created by <span>Yomal Lakshan</span></div>
         <div class="sync-indicator" id="sync-indicator">
@@ -105,9 +86,23 @@
         <div class="editor-status" id="editor-status">Lines: 1 | Chars: 0</div>
     </footer>
 
-    <!-- Settings Modal UI (Trimmed for brevity, keep your original HTML inside here) -->
+    <!-- New File Modal -->
+    <div id="new-file-modal" class="modal-overlay">
+        <div class="modal-box">
+             <div class="modal-header">
+                <div class="modal-title">📄 අලුත් File එකක් සාදන්න</div>
+                <button class="modal-close-btn" id="close-new-file-modal">❌</button>
+            </div>
+            <div class="setting-group">
+                <span class="setting-label">File Name (Extensions: .js, .css ආදිය සමඟ දෙන්න)</span>
+                <input type="text" id="new-file-name" class="text-input" placeholder="උදා: script.js, style.css" autocomplete="off">
+            </div>
+            <button id="btn-create-file" class="modal-btn btn-ok" style="width:100%; margin-top:10px;">File එක හදන්න</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal UI -->
     <div id="settings-modal" class="modal-overlay">
-        <!-- Your original Settings modal code here -->
         <div class="modal-box">
              <div class="modal-header">
                 <div class="modal-title">⚙️ Editor Settings</div>
@@ -118,20 +113,9 @@
                 <div class="theme-grid">
                     <div class="theme-card active" data-theme="default">Catppuccin Dark</div>
                     <div class="theme-card" data-theme="light">Light Theme</div>
-                    <div class="theme-card" data-theme="monokai">Monokai</div>
-                    <div class="theme-card" data-theme="dracula">Dracula</div>
                 </div>
             </div>
-            <div class="setting-group">
-                <span class="setting-label">Code Font Size</span>
-                <select id="font-size-select" class="select-input">
-                    <option value="12">Small (12px)</option>
-                    <option value="14" selected>Normal (14px)</option>
-                    <option value="16">Large (16px)</option>
-                </select>
-            </div>
             <button id="modal-btn-download" class="modal-btn btn-ok" style="width:100%; margin-top:10px;">Download Codes</button>
-            <button id="modal-btn-fullscreen" class="modal-btn btn-cancel" style="width:100%; margin-top:10px;">Toggle Fullscreen</button>
         </div>
     </div>
 
@@ -146,21 +130,14 @@
                 <div class="download-card highlight" id="dl-bundle">
                     <div>
                         <div class="download-card-title">Full Project Bundled (.html)</div>
-                        <div class="download-card-desc">HTML, CSS, JS සියල්ල එකට එකතු කළ index.html ලෙස.</div>
+                        <div class="download-card-desc">ඔබ සෑදූ CSS/JS සියල්ල එකට එකතු කළ index.html ලෙස.</div>
                     </div>
                 </div>
-                <div class="download-card" id="dl-html"><div class="download-card-title">HTML File Only</div></div>
-                <div class="download-card" id="dl-css"><div class="download-card-title">CSS File Only</div></div>
-                <div class="download-card" id="dl-js"><div class="download-card-title">JavaScript File Only</div></div>
+                <div class="download-card" id="dl-current">
+                    <div class="download-card-title">Download Current File</div>
+                    <div class="download-card-desc">දැනට විවෘත කර ඇති ගොනුව පමණක් වෙනම.</div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Error Modal & Custom Confirm Modal (Keep your original code) -->
-    <div id="custom-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="modal-message" class="modal-message">Message</div>
-            <div id="modal-buttons" class="modal-buttons"></div>
         </div>
     </div>
 
