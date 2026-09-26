@@ -48,12 +48,41 @@ const downloadModal = document.getElementById('download-modal');
 let saveTimeout;
 let toastTimeout;
 
-// ---------------- 3. UI and Tab Generation ----------------
+// ---------------- 3. Custom UI Components (Popups & Toasts) ----------------
 function showToast(text) {
     document.getElementById('toast-text').innerText = text;
     toast.classList.add('show');
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2000);
+    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 2500);
+}
+
+function showConfirm(title, message, onConfirm) {
+    const modal = document.getElementById('custom-confirm-modal');
+    document.getElementById('confirm-title').innerText = title;
+    document.getElementById('confirm-message').innerText = message;
+    modal.classList.add('show');
+    
+    // Remove old event listeners using cloneNode trick
+    const btnOk = document.getElementById('btn-confirm-ok');
+    const btnCancel = document.getElementById('btn-confirm-cancel');
+    const btnClose = document.getElementById('close-confirm-modal');
+    
+    const newBtnOk = btnOk.cloneNode(true);
+    const newBtnCancel = btnCancel.cloneNode(true);
+    const newBtnClose = btnClose.cloneNode(true);
+    
+    btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+    btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+    btnClose.parentNode.replaceChild(newBtnClose, btnClose);
+    
+    const closeModal = () => modal.classList.remove('show');
+    
+    newBtnCancel.addEventListener('click', closeModal);
+    newBtnClose.addEventListener('click', closeModal);
+    newBtnOk.addEventListener('click', () => {
+        closeModal();
+        onConfirm();
+    });
 }
 
 function getActiveTextarea() {
@@ -141,17 +170,17 @@ function renderTabsAndEditors() {
 }
 
 function deleteFile(fileName) {
-    if(confirm(`"${fileName}" මකා දැමීමට අවශ්‍යද?`)) {
+    showConfirm('⚠️ ගොනුව මකා දැමීම', `"${fileName}" සම්පූර්ණයෙන්ම මකා දැමීමට ඔබට අවශ්‍යද?`, () => {
         delete appFiles[fileName];
         if(currentActiveFile === fileName) currentActiveFile = 'index.html';
         saveState();
         renderTabsAndEditors();
         triggerAutoSaveAndRefresh();
-        showToast('File එක මකා දමන ලදී!');
-    }
+        showToast('🗑️ File එක මකා දමන ලදී!');
+    });
 }
 
-// ---------------- 4. Add File Logic ----------------
+// ---------------- 4. Add & Open File Logic ----------------
 btnAddTab.onclick = () => {
     document.getElementById('new-file-name').value = '';
     newFileModal.classList.add('show');
@@ -161,16 +190,53 @@ document.getElementById('close-new-file-modal').onclick = () => newFileModal.cla
 
 document.getElementById('btn-create-file').onclick = () => {
     let name = document.getElementById('new-file-name').value.trim();
-    if(!name) return showToast('කරුණාකර නමක් ඇතුලත් කරන්න!');
-    if(appFiles[name]) return showToast('මෙම නමින් File එකක් දැනටමත් ඇත!');
+    if(!name) return showToast('❌ කරුණාකර නමක් ඇතුලත් කරන්න!');
+    if(appFiles[name]) return showToast('❌ මෙම නමින් File එකක් දැනටමත් ඇත!');
     
     appFiles[name] = { content: '' };
     currentActiveFile = name;
     saveState();
     newFileModal.classList.remove('show');
     renderTabsAndEditors();
-    showToast(`${name} සෑදුවා!`);
+    showToast(`✅ ${name} සෑදුවා!`);
 };
+
+// Handle Open Local File Icon
+document.getElementById('btn-open-file').addEventListener('click', () => {
+    document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+    const files = e.target.files;
+    if(files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target.result;
+            let fileName = file.name;
+            appFiles[fileName] = { content: content };
+            currentActiveFile = fileName;
+            saveState();
+            renderTabsAndEditors();
+            showToast(`📁 ${fileName} විවෘත කළා!`);
+        };
+        reader.readAsText(file);
+    });
+    e.target.value = ''; // Reset input
+});
+
+// Handle Undo Icon
+document.getElementById('btn-undo').addEventListener('click', () => {
+    const activeArea = getActiveTextarea();
+    if(activeArea) {
+        activeArea.focus();
+        document.execCommand('undo');
+        appFiles[currentActiveFile].content = activeArea.value;
+        triggerAutoSaveAndRefresh();
+        showToast('↩️ Undo සාර්ථකයි!');
+    }
+});
 
 // ---------------- 5. Live Preview Logic ----------------
 function triggerAutoSaveAndRefresh() {
@@ -227,24 +293,24 @@ btnFloatingCopy.addEventListener('click', async () => {
         try {
             const text = await navigator.clipboard.readText();
             document.execCommand('insertText', false, text); 
-            showToast('කේතය Paste කරන ලදී!');
+            showToast('✅ කේතය Paste කරන ලදී!');
         } catch (err) {
-            showToast('Browser Security: Long-press කර Paste කරන්න.');
+            showToast('⚠️ Browser Security: Long-press කර Paste කරන්න.');
         }
     } else {
         activeArea.select();
         document.execCommand('copy');
-        showToast('කේතය සාර්ථකව Copy විය!');
+        showToast('✅ කේතය සාර්ථකව Copy විය!');
     }
 });
 
 document.getElementById('btn-floating-delete').addEventListener('click', () => {
-    if(confirm('මෙම කේතය මකා දැමීමට අවශ්‍යද?')) {
+    showConfirm('⚠️ කේතය මකා දැමීම', 'විවෘත කර ඇති කේතය සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍යද?', () => {
         getActiveTextarea().value = '';
         appFiles[currentActiveFile].content = '';
         triggerAutoSaveAndRefresh();
-        showToast('මකා දමන ලදී!');
-    }
+        showToast('🗑️ මකා දමන ලදී!');
+    });
 });
 
 // Settings & Splash Screen
@@ -254,7 +320,21 @@ setTimeout(() => document.getElementById('splash-screen').classList.add('hide'),
 document.getElementById('btn-settings').addEventListener('click', () => settingsModal.classList.add('show'));
 document.getElementById('close-settings-modal').addEventListener('click', () => settingsModal.classList.remove('show'));
 
-// Downloads
+// Theme Switcher Logic (Bugs Fixed)
+const themeCards = document.querySelectorAll('.theme-card');
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ide-theme', theme);
+    themeCards.forEach(c => {
+        if(c.getAttribute('data-theme') === theme) c.classList.add('active');
+        else c.classList.remove('active');
+    });
+}
+themeCards.forEach(card => {
+    card.addEventListener('click', (e) => setTheme(e.currentTarget.getAttribute('data-theme')));
+});
+
+// Downloads (Bugs Fixed)
 document.getElementById('modal-btn-download').addEventListener('click', () => {
     settingsModal.classList.remove('show'); downloadModal.classList.add('show');
 });
@@ -265,8 +345,11 @@ function executeDownload(content, fileName, mimeType) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = fileName;
+    document.body.appendChild(a); // Appending to DOM fixes download issues in some browsers
     a.click();
+    document.body.removeChild(a); // Cleanup
     URL.revokeObjectURL(url);
+    showToast('📥 Download වීම ආරම්භ විය!');
 }
 
 document.getElementById('dl-bundle').addEventListener('click', () => {
@@ -292,7 +375,8 @@ document.getElementById('dl-current').addEventListener('click', () => {
 
 // Init
 window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('ide-theme') || 'default';
+    setTheme(savedTheme);
     renderTabsAndEditors();
     renderPreview();
 });
-
