@@ -295,3 +295,4 @@ window.addEventListener('DOMContentLoaded', () => {
     renderTabsAndEditors();
     renderPreview();
 });
+
