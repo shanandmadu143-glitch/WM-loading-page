@@ -101,3 +101,4 @@ main.show-preview #preview-container { opacity: 1; pointer-events: auto; }
 
 .toast-notification { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg-header); color: var(--accent-1); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--accent-1); opacity: 0; transition: 0.3s; z-index: 10000; }
 .toast-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
